@@ -17,6 +17,7 @@ void print(string cmd, StatusType res);
 void print(string cmd, output_t<int> res);
 void print(string cmd, output_t<bool> res);
 
+
 int main()
 {
     

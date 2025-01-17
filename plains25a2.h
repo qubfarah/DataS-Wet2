@@ -8,19 +8,26 @@
 // DO NOT erase or modify the signatures of the public methods.
 // DO NOT modify the preprocessors in this file.
 // DO NOT use the preprocessors in your other code files.
-// 
+//
 
 #ifndef PLAINS25WINTER_WET1_H_
 #define PLAINS25WINTER_WET1_H_
 
 #include "wet2util.h"
+#include <iostream>
+#include <cstring>
+#include "Jockey.h"
+#include "Team.h"
+#include "HashTable.h"
+#include "DynamicArray.h"
+#include "UnionFind.h"
 
 class Plains {
 private:
-    //
-    // Here you may add anything you want
-    //
-    
+    HashTable<int, Team*> teams;
+    HashTable<int, Jockey*> jockeys;
+    UnionFind unionFind;
+
 public:
     // <DO-NOT-MODIFY> {
     Plains();

@@ -13,4 +13,13 @@ add_executable(DS_wet2_Winter_2024_2025
         Team.cpp
         Team.h
         Jockey.cpp
-        Jockey.h)
+        Jockey.h
+        DynamicArray.cpp
+        HashTable.cpp
+        cmake-build-debug/UnionFind.cpp
+        UnionFind.cpp
+        UnionFind.cpp
+        UnionFind.cpp
+        DynamicArray.h
+        HashTable.h
+        UnionFind.h)

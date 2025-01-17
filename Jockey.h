@@ -6,3 +6,13 @@
 #define DS_WET2_WINTER_2024_2025_JOCKEY_H
 
 #endif //DS_WET2_WINTER_2024_2025_JOCKEY_H
+
+class Jockey {
+public:
+    int id;
+    int teamId;
+    int record;
+
+    Jockey(int jockeyId, int teamId)
+            : id(jockeyId), teamId(teamId), record(0) {}
+};
