@@ -21,11 +21,16 @@
 #include "HashTable.h"
 #include "DynamicArray.h"
 #include "UnionFind.h"
+#include <memory>
 
-class Plains {
+using namespace std;
+
+class Plains
+{
 private:
-    HashTable<int, Team*> teams;
-    HashTable<int, Jockey*> jockeys;
+    HashTable<int, shared_ptr<Team>> teams;
+    HashTable<int, shared_ptr<Jockey>> jockeys;
+
     UnionFind unionFind;
 
 public:

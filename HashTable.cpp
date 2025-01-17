@@ -21,7 +21,7 @@ private:
     }
 
 public:
-    HashTable(int cap = 10) : capacity(cap), size(0) {
+    explicit HashTable(const int& cap = 10) : capacity(cap), size(0) {
         table = new Node*[capacity];
         for (int i = 0; i < capacity; ++i) {
             table[i] = nullptr;
