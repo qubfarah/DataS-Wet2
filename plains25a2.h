@@ -28,13 +28,43 @@
 
 using namespace std;
 
-class Plains
-{
+class Plains {
 private:
     HashTable<int, Team> teams;
     HashTable<int, Jockey> jockeys;
 
+    // for every jockey added, a set by it's id is created
+    // if the team the jockey is added to empty, then the teams set id is this jockey id,
+    // if not, then the jockey is merged with the team's set id.
+    // therefore, in terms of length of hashtable, it's O(n)
+    // but in terms of active sets, it's O(m).
     UnionFind<Jockey> jockeysTeamMembership;
+
+    class PlainsUtils {
+        shared_ptr<Plains> p;
+
+    public:
+        bool inSameTeamMembership(const shared_ptr<Jockey> &a, const shared_ptr<Jockey> &b) const {
+            return p->jockeysTeamMembership.find(a->id) == p->jockeysTeamMembership.find(b->id);
+        }
+
+        Team& team(const shared_ptr<Jockey> &a) const {
+            const auto teamSet = p->jockeysTeamMembership.find(a->id);
+            auto teamId = teamSet.identifier;
+
+            return p->teams[teamId];
+        }
+
+        static bool invalid(const shared_ptr<Team>&team) {
+            return team == nullptr || !team->isMerged;
+        }
+
+        UnionFind<Jockey>::Set set(const shared_ptr<Team>& team) const {
+            return p->jockeysTeamMembership.find(team->firstJockey);
+        }
+    };
+
+    PlainsUtils utils;
 
 public:
     // <DO-NOT-MODIFY> {
@@ -55,6 +85,7 @@ public:
     output_t<int> get_jockey_record(int jockeyId);
 
     output_t<int> get_team_record(int teamId);
+
     // } </DO-NOT-MODIFY>
 };
 

@@ -5,6 +5,8 @@
 #ifndef DS_WET2_WINTER_2024_2025_JOCKEY_H
 #define DS_WET2_WINTER_2024_2025_JOCKEY_H
 
+#include "Team.h"
+
 class Jockey {
 public:
     int id;

@@ -24,30 +24,50 @@
 // };
 
 template<typename T>
-class UnionFind
-{
+class UnionFind {
 private:
-    struct Node
-    {
+    struct Node {
         int value;
-        Node* head;
-        Node* next;
+        Node *head;
+        Node *next;
     };
 
     DynamicArray<Node> A;
-public:
-    class Set
-    {
 
-    };
 public:
-    explicit UnionFind(const int& n);
+    class Set {
+    public:
+        int identifier;
+
+
+        class Iterator {
+        public:
+            // Iterator(const PersonList *list, int index);
+
+            Iterator &operator++();
+
+            bool operator!=(const Iterator &);
+
+            T &operator*();
+        };
+
+        Iterator begin();
+
+        Iterator end();
+
+        bool operator ==(const Set &other) const {
+            return identifier == other.identifier;
+        }
+    };
+
+public:
+    explicit UnionFind(const int &n);
 
     // returns the set of the index
-    std::shared_ptr<Set> find(const int& x) const;
+    Set &find(const int &key) const;
 
-    //which sets to unite.
-    void unite(const Set& x, const Set& y);
+    //which sets to unite. (x <- y)
+    void unite(const Set &x, const Set &y);
 };
 
 
