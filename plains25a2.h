@@ -14,24 +14,27 @@
 #define PLAINS25WINTER_WET1_H_
 
 #include "wet2util.h"
+
 #include <iostream>
 #include <cstring>
+#include <memory>
+
+#include "HashTable.h"
+#include "UnionFind.h"
+
 #include "Jockey.h"
 #include "Team.h"
-#include "HashTable.h"
-#include "DynamicArray.h"
-#include "UnionFind.h"
-#include <memory>
+
 
 using namespace std;
 
 class Plains
 {
 private:
-    HashTable<int, shared_ptr<Team>> teams;
-    HashTable<int, shared_ptr<Jockey>> jockeys;
+    HashTable<int, Team> teams;
+    HashTable<int, Jockey> jockeys;
 
-    UnionFind unionFind;
+    UnionFind<Jockey> jockeysTeamMembership;
 
 public:
     // <DO-NOT-MODIFY> {

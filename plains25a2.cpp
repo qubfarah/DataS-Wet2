@@ -15,88 +15,31 @@ Plains::Plains()
 
 Plains::~Plains()
 {
-    // Free allocated memory for teams and jockeys
-    for (int i = 0; i < teams.get_capacity(); ++i) {
-        Team* team;
-        if (teams.find(i, team)) {
-            delete team;
-        }
-    }
-    for (int i = 0; i < jockeys.get_capacity(); ++i) {
-        Jockey* jockey;
-        if (jockeys.find(i, jockey)) {
-            delete jockey;
-        }
-    }
-//
-//   // free jockey table
-//   for(int i = 0; i< HASH_TABLE_SIZE; i++) {
-//       Jockey *current = jockeyTable[i];
-//       while (current) {
-//           Jockey *temp = current;
-//           current = current->next;
-//           delete temp;
-//       }
-//   }
-//
-//    // free team table
-//    for(int i = 0; i< HASH_TABLE_SIZE; i++) {
-//        Team *current = teamTable[i];
-//        while (current) {
-//            Team *temp = current;
-//            current = current->next;
-//            delete temp;
-//        }
-//    }
 
 }
 
 StatusType Plains::add_team(int teamId)
 {
+    if (teamId <= 0) return StatusType::INVALID_INPUT;
 
-    if (teamId <= 0) return INVALID_INPUT;
+    if(teams.exists(teamId)) return StatusType::FAILURE;
 
-    if (!teams.insert(teamId, new Team(teamId))) {
-        return FAILURE; // Team already exists
-    }
-    return SUCCESS;
+    teams[teamId] = move(Team(teamId));
 
-//    checkValidity(teamId); // checks if negative
-//    if(findTeam(teamId))
-//        return StatusType::FAILURE;
-//
-//    int index = hash(teamId);
-//    Team* newTeam = new Team{teamId, 0 , teamId, teamTable[index]};
-//    teamTable[index] = newTeam;
-//
-//    return StatusType::FAILURE;
+    return StatusType::SUCCESS;
 }
 
 StatusType Plains::add_jockey(int jockeyId, int teamId)
 {
-    if (jockeyId <= 0 || teamId <= 0) return INVALID_INPUT;
+    if (jockeyId <= 0 || teamId <= 0) return StatusType::INVALID_INPUT;
 
-    Team* team;
-    if (!teams.find(teamId, team)) {
-        return FAILURE; // Team does not exist
-    }
+    auto team = teams.search(teamId);
 
-    if (!jockeys.insert(jockeyId, new Jockey(jockeyId, teamId))) {
-        return FAILURE; // Jockey already exists
-    }
+    if(team == nullptr) return StatusType::FAILURE;
 
-    return SUCCESS;
+    jockeys[jockeyId] = move(Jockey(jockeyId, team));
 
-//    checkValidity(teamId); // checks if negative
-//    checkValidity(jockeyId); // checks if negative
-//    if(findTeam(teamId) || findTeam(jockeyId))
-//        return StatusType::FAILURE;
-//
-//    int index = hash(teamId);
-//    Team* newJockey = new Jockey{jockeyId,teamId, 0  , jockeyTable[index]};
-//    teamTable[index] = newTeam;
-//
-//    return StatusType::FAILURE;
+    return StatusType::SUCCESS;
 }
 
 StatusType Plains::update_match(int victoriousJockeyId, int losingJockeyId)

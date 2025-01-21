@@ -23,6 +23,7 @@
 //     void unite(const int& x, const int& y);
 // };
 
+template<typename T>
 class UnionFind
 {
 private:
@@ -45,7 +46,8 @@ public:
     // returns the set of the index
     std::shared_ptr<Set> find(const int& x) const;
 
-    void unite(const int& x, const int& y);
+    //which sets to unite.
+    void unite(const Set& x, const Set& y);
 };
 
 
