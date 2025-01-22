@@ -102,7 +102,7 @@ public:
         return search(key) != nullptr;
     }
 
-    shared_ptr<TValue> search(TKey &key) const {
+    shared_ptr<TValue> search(const TKey &key) const {
         int hashKey = hash(key);
 
         if (table[hashKey].isEmpty) {

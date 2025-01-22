@@ -19,6 +19,9 @@ StatusType Plains::add_team(int teamId) {
 
     recordTokens[teamId] = RecordToken(teamId);
 
+    // starting at 0
+    utils.add_record_token(recordTokens[teamId], 0);
+
     return StatusType::SUCCESS;
 }
 
@@ -82,20 +85,37 @@ StatusType Plains::merge_teams(int teamId1, int teamId2) {
 
     if (team1 == nullptr || team2 == nullptr) return StatusType::FAILURE;
 
-    if (team1->totalRecord > team2->totalRecord) {
-        team1->totalRecord += team2->totalRecord;
+    bool mergeToFirst = team1->totalRecord >= team2->totalRecord;
 
-        jockeysTeamMembership.unite(utils.set(team1), utils.set(team2));
-
-        //
-        team2->deactivate();
-    }
+    utils.merge_teams(team1, team2, mergeToFirst);
 
     return StatusType::SUCCESS;
 }
 
 StatusType Plains::unite_by_record(int record) {
     if (record <= 0) return StatusType::INVALID_INPUT;
+
+    auto recordsList1 = records.search(record);
+
+    if(recordsList1 == nullptr) return StatusType::FAILURE;
+
+    RecordToken* record1 = *recordsList1;
+
+    // we want exactly 1 in the list.
+    if(record1->next != nullptr) return StatusType::FAILURE;
+    
+
+    auto recordsList2 = records.search(-record);
+
+    if(recordsList2 == nullptr) return StatusType::FAILURE;
+
+    RecordToken* record2 = *recordsList2;
+
+    // we want exactly 2 in the list.
+    if(record2->next != nullptr) return StatusType::FAILURE;
+
+
+    utils.merge_teams(record1->teamId, record2->teamId, true);
 
 
     // No such teams found
