@@ -19,7 +19,9 @@ public:
 
     Team(int teamId) : id(teamId), totalRecord(0) {}
 
-    bool deactivate();
+    bool deactivate() {
+        isMerged = true;
+    }
 };
 
 

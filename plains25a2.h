@@ -84,7 +84,7 @@ private:
             return team == nullptr || !team->isMerged;
         }
 
-        UnionFind<Jockey>::Set set(const shared_ptr<Team> &team) const
+        auto set(const shared_ptr<Team> &team) const
         {
             return p->jockeysTeamMembership.find(team->firstJockey);
         }
@@ -166,6 +166,13 @@ private:
             //
             fromTeam->deactivate();
         }
+
+
+        void verifyJockey() {
+
+        }
+
+        void addJockeyMembership() {}
     };
 
     PlainsUtils utils;

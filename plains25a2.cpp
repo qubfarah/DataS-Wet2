@@ -34,16 +34,16 @@ StatusType Plains::add_jockey(int jockeyId, int teamId) {
 
     jockeys[jockeyId] = Jockey(jockeyId, team);
     
-    auto set = jockeysTeamMembership.makeset(jockeyId, teamId);
+    auto set = jockeysTeamMembership.makeset(jockeyId);
 
     // if the team does not have a set.
     if(team->firstJockey == -1) {
         team->firstJockey = jockeyId;
     } else {
         // this team is not empty, therefore merge jockey's set with team's set.
-        auto teamSet = jockeysTeamMembership.find(team->firstJockey);
+        // auto teamSet = jockeysTeamMembership.find(team->firstJockey);
 
-        jockeysTeamMembership.unite(teamSet, set);
+        jockeysTeamMembership.unite(team->firstJockey, set);
     }
 
 
