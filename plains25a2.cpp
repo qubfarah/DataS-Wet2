@@ -17,6 +17,8 @@ StatusType Plains::add_team(int teamId) {
 
     teams[teamId] = Team(teamId);
 
+    recordTokens[teamId] = RecordToken(teamId);
+
     return StatusType::SUCCESS;
 }
 
@@ -25,9 +27,22 @@ StatusType Plains::add_jockey(int jockeyId, int teamId) {
 
     const auto team = teams.search(teamId);
 
-    if (team == nullptr) return StatusType::FAILURE;
+    if (utils.invalid(team)) return StatusType::FAILURE;
 
     jockeys[jockeyId] = Jockey(jockeyId, team);
+    
+    auto set = jockeysTeamMembership.makeset(jockeyId, teamId);
+
+    // if the team does not have a set.
+    if(team->firstJockey == -1) {
+        team->firstJockey = jockeyId;
+    } else {
+        // this team is not empty, therefore merge jockey's set with team's set.
+        auto teamSet = jockeysTeamMembership.find(team->firstJockey);
+
+        jockeysTeamMembership.unite(teamSet, set);
+    }
+
 
     return StatusType::SUCCESS;
 }
@@ -49,11 +64,12 @@ StatusType Plains::update_match(int victoriousJockeyId, int losingJockeyId) {
     auto victoriousTeam = utils.team(victorious);
     auto losingTeam = utils.team(losing);
 
-    victoriousTeam.totalRecord += 1;
-    losingTeam.totalRecord -= 1;
 
     victorious->record += 1;
     losing->record -= 1;
+
+    utils.updateRecord(victoriousTeam, victoriousTeam.totalRecord+1);
+    utils.updateRecord(losingTeam, losingTeam.totalRecord-1);
 
     return StatusType::SUCCESS;
 }

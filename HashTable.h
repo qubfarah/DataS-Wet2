@@ -94,7 +94,7 @@ public:
     }
 
 
-    void insert(const TKey &key, const TValue *value) {
+    void insert(const TKey &key, const TValue &value) {
         m_insert(table, &hash, key, value);
     }
 
@@ -120,7 +120,7 @@ public:
     }
 
 
-    TValue & operator [](TKey &key) {
+    TValue & operator [](const TKey &key) {
         return *search(key);
     }
 };

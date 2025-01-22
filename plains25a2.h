@@ -28,6 +28,20 @@
 
 using namespace std;
 
+// double linked list
+class RecordToken {
+
+public:
+
+int teamId;
+
+RecordToken* next;
+RecordToken* previous;
+
+
+
+};
+
 class Plains {
 private:
     HashTable<int, Team> teams;
@@ -39,6 +53,10 @@ private:
     // therefore, in terms of length of hashtable, it's O(n)
     // but in terms of active sets, it's O(m).
     UnionFind<Jockey> jockeysTeamMembership;
+
+
+    HashTable<int, RecordToken> recordTokens;
+    HashTable<int, RecordToken> records;
 
     class PlainsUtils {
         shared_ptr<Plains> p;
@@ -61,6 +79,23 @@ private:
 
         UnionFind<Jockey>::Set set(const shared_ptr<Team>& team) const {
             return p->jockeysTeamMembership.find(team->firstJockey);
+        }
+
+        void updateRecord(const Team& team, int record) {
+            auto teamToken = p->recordTokens[team.id]; 
+
+            if(team.totalRecord == 0) {
+                auto nextRecord = p->records.search(record);
+                if(nextRecord == nullptr) {
+                    p->records.insert(record, teamToken);
+                }
+                
+            }
+
+
+            if(teamToken.previous == nullptr) {
+                records[team.totalRecord]
+            }
         }
     };
 

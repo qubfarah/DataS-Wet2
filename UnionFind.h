@@ -63,6 +63,10 @@ public:
 public:
     explicit UnionFind(const int &n);
 
+    // key is key, identifier is like a meta-data for the set (teamId for example)
+    Set& makeset(const int& key, const int& identifier); 
+
+
     // returns the set of the index
     Set &find(const int &key) const;
 
