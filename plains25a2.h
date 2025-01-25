@@ -30,22 +30,24 @@ using namespace std;
 // double linked list
 class RecordToken
 {
-
 public:
     int teamId;
+    RecordToken() = default;
 
-    RecordToken(int teamId) : teamId(teamId) {}
+    RecordToken(int teamId) : teamId(teamId)
+    {
+    }
 
-    RecordToken *next;
-    RecordToken *previous;
+    RecordToken* next;
+    RecordToken* previous;
 
-    bool operator==(const RecordToken &other)
+    bool operator==(const RecordToken& other)
     {
         return &other == this;
     }
 };
 
-class Plains
+class Plains : public enable_shared_from_this<Plains>
 {
 private:
     HashTable<int, Team> teams;
@@ -56,50 +58,48 @@ private:
     // if not, then the jockey is merged with the team's set id.
     // therefore, in terms of length of hashtable, it's O(n)
     // but in terms of active sets, it's O(m).
-    UnionFind<Jockey> jockeysTeamMembership;
+    // UnionFind jockeysTeamMembership;
+    UnionFind teamMembership;
 
     HashTable<int, RecordToken> recordTokens;
-    HashTable<int, RecordToken *> records;
+    HashTable<int, RecordToken*> records;
 
     class PlainsUtils
     {
-        shared_ptr<Plains> p;
+        Plains* p;
 
     public:
-        bool inSameTeamMembership(const shared_ptr<Jockey> &a, const shared_ptr<Jockey> &b) const
+        PlainsUtils(Plains* _p) : p(_p)
         {
-            return p->jockeysTeamMembership.find(a->id) == p->jockeysTeamMembership.find(b->id);
         }
 
-        Team &team(const shared_ptr<Jockey> &a) const
-        {
-            const auto teamSet = p->jockeysTeamMembership.find(a->id);
-            auto teamId = teamSet.identifier;
 
-            return p->teams[teamId];
+        bool inSameTeamMembership(const shared_ptr<Jockey>& a, const shared_ptr<Jockey>& b) const
+        {
+            return p->teamMembership.find(a->originalTeamId) == p->teamMembership.find(b->originalTeamId);
         }
 
-        static bool invalid(const shared_ptr<Team> &team)
+        // O(log(m))
+        Team& team(const shared_ptr<Jockey>& a) const
         {
-            return team == nullptr || !team->isMerged;
+            const auto& teamSet = p->teamMembership.find(a->id);
+
+            return p->teams[teamSet];
         }
 
-        auto set(const shared_ptr<Team> &team) const
+        static bool invalid(const shared_ptr<Team>& team)
         {
-            return p->jockeysTeamMembership.find(team->firstJockey);
+            return team == nullptr || team->isMerged;
         }
 
-        void updateRecord(Team &team, int record)
+        void updateRecord(Team& team, int record)
         {
-            auto &teamToken = p->recordTokens[team.id];
+            auto& teamToken = p->recordTokens[team.id];
 
-            if (team.totalRecord == 0)
+            const auto nextRecord = p->records.search(record);
+            if (nextRecord == nullptr)
             {
-                auto nextRecord = p->records.search(record);
-                if (nextRecord == nullptr)
-                {
-                    p->records.insert(record, &teamToken);
-                }
+                p->records.insert(record, &teamToken);
             }
 
             // if the team token is the first in the double linked list.
@@ -110,17 +110,21 @@ private:
             team.totalRecord = record;
         }
 
-        void removeTeamFromRecord(Team &team)
+        void removeTeamFromRecord(Team& team)
         {
-            auto &teamToken = p->recordTokens[team.id];
+            auto& teamToken = p->recordTokens[team.id];
 
+            // if the team is the first at the head
             if (p->records[team.totalRecord] == &teamToken)
             {
                 auto next = teamToken.next;
 
                 p->records[team.totalRecord] = next;
                 // remove this node from link
-                next->previous = nullptr;
+                if (next != nullptr)
+                {
+                    next->previous = nullptr;
+                }
 
                 teamToken.previous = nullptr;
                 teamToken.next = nullptr;
@@ -134,17 +138,19 @@ private:
             }
         }
 
-        void add_record_token(RecordToken &token, int record)
+        void add_record_token(RecordToken& token, int record)
         {
-            auto currentHead = p->records[record];
-
-            currentHead->previous = &token;
-            token.next = currentHead;
+            RecordToken* currentHead = p->records[record];
+            if (currentHead != nullptr)
+            {
+                currentHead->previous = &token;
+                token.next = currentHead;
+            }
 
             p->records[record] = &token;
         }
 
-        void merge_teams(const int &teamId1, const int &teamId2, bool mergeToFirst)
+        void merge_teams(const int& teamId1, const int& teamId2, bool mergeToFirst)
         {
             auto team1 = p->teams.search(teamId1);
             auto team2 = p->teams.search(teamId2);
@@ -161,18 +167,10 @@ private:
 
             updateRecord(*toTeam, toTeam->totalRecord + fromTeam->totalRecord);
 
-            p->jockeysTeamMembership.unite(set(toTeam), set(toTeam));
+            p->teamMembership.unite(toTeam->id, fromTeam->id);
 
-            //
             fromTeam->deactivate();
         }
-
-
-        void verifyJockey() {
-
-        }
-
-        void addJockeyMembership() {}
     };
 
     PlainsUtils utils;

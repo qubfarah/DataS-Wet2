@@ -12,14 +12,15 @@ public:
     int id;
     int totalRecord;
 
-    int firstJockey;
-
     // when this team has been merged, and no longer considered an active record.
     bool isMerged;
 
+    Team() = default;
+
+
     Team(int teamId) : id(teamId), totalRecord(0) {}
 
-    bool deactivate() {
+    void deactivate() {
         isMerged = true;
     }
 };

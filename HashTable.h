@@ -7,123 +7,194 @@
 
 #include <functional>
 #include <memory>
+#include <ctime>
+
+#include "DoubleLinkedList.h"
 
 using namespace std;
 
-template<typename TKey, typename TValue>
-class HashTable {
-    class Node : enable_shared_from_this<Node> {
+template <typename TKey, typename TValue>
+class HashTable : public enable_shared_from_this<HashTable<TKey, TValue>>
+{
+    const float MAX_LOAD_FACTOR = 0.75;
+
+    class Pair
+    {
     public:
-        bool isEmpty;
-
-        shared_ptr<Node> next;
-
-        weak_ptr<Node> previous;
-
         TKey key;
-
         shared_ptr<TValue> value;
+
+        Pair(TKey key, shared_ptr<TValue> value): key(key), value(value)
+        {
+        }
     };
 
-    Node *table;
+    using TableItem = DoubleLinkedList<shared_ptr<Pair>>;
+    using Table = TableItem;
+
+    Table* table;
 
     int tableSize;
-
+    int size;
 
     int hash_a;
     int hash_b;
 
-
-    int hash(TKey key) {
+    int hash(const TKey& key) const
+    {
         return (hash_a * key + hash_b) % tableSize;
     }
 
-    void resize() {
-        auto newTable = new Node[2 * tableSize];
+    void resize()
+    {
+        auto oldSize = tableSize;
+        tableSize *= 2;
+        auto newTable = new Table[tableSize];
 
-
-        for (const Node &node: *this) {
-            m_insert(newTable, &hash, node.key, node.value);
+        size = 0;
+        for (int i = 0; i < oldSize; i++)
+        {
+            for (const shared_ptr<Pair>& pair : table[i])
+            {
+                m_insert(newTable, pair);
+            }
         }
 
         // free previous data;
         delete[] table;
 
-        tableSize *= 2;
-
         table = newTable;
     }
 
-    using HashFn = function<int(TKey key)>;
 
-    void m_insert(Node *table, const HashFn &hashFn, TKey &key, TValue &value) {
-        int hashKey = hashFn(key);
+    void m_insert(Table* table, const shared_ptr<Pair>& pair)
+    {
+        int hashKey = hash(pair->key);
 
+        table[hashKey].insert(pair);
 
-        // this could be turned into one execution.
-        if (table[hashKey].isEmpty) {
-            Node node(key, value);
-
-            table[hashKey] = std::move(node);
-
-            return;
-        }
-
-        auto current = table[hashKey];
-
-        while (current.next != nullptr) {
-            current = current.next;
-        }
-
-        Node node(current, key, value);
-
-        current.next = std::move(node);
+        size++;
     }
 
 public:
-    HashTable() {
+    HashTable() : tableSize(10), size(0)
+    {
+        table = new Table[tableSize];
+
         // Seed for random number generation
         std::srand(std::time(nullptr));
         // Generate random coefficients a and b
         hash_a = std::rand() % tableSize + 1; // a should be non-zero
         hash_b = std::rand() % tableSize;
+        // hash_a = 5;
+        // hash_b = 1;
     }
 
-    ~HashTable() {
+    ~HashTable()
+    {
         delete[] table;
     }
 
 
-    void insert(const TKey &key, const TValue &value) {
-        m_insert(table, &hash, key, value);
+    void insert(const TKey& key, const TValue& value)
+    {
+        // resize hash table
+        if (size >= tableSize * MAX_LOAD_FACTOR)
+        {
+            resize();
+        }
+
+        shared_ptr<TValue> value_ptr = make_shared<TValue>(value);
+
+        shared_ptr<Pair> pair = make_shared<Pair>(key, value_ptr);
+
+        m_insert(table, pair);
     }
 
-    bool exists(const TKey &key) {
+    bool exists(const TKey& key)
+    {
         return search(key) != nullptr;
     }
 
-    shared_ptr<TValue> search(const TKey &key) const {
+    shared_ptr<TValue> search(const TKey& key) const
+    {
         int hashKey = hash(key);
 
-        if (table[hashKey].isEmpty) {
-            return nullptr;
-        }
+        TableItem list = table[hashKey];
 
-        auto current = table[hashKey];
-
-        while (current != nullptr) {
-            if (current.key == key) return current.value;
-            current = current.next;
+        for (const auto& pair : list)
+        {
+            if (pair->key == key) return pair->value;
         }
 
         return nullptr;
     }
 
-
-    TValue & operator [](const TKey &key) {
+    const TValue& operator [](const TKey& key) const
+    {
         return *search(key);
+    }
+
+
+    // class TValueProxy : public TValue
+    // {
+    // public:
+    //     shared_ptr<HashTable> table;
+    //     TKey key;
+    //
+    //
+    //     TValueProxy(shared_ptr<HashTable> table, const TKey& key) : table(table), key(key)
+    //     {
+    //     }
+    //
+    //     // acts like lazy-insert
+    //     TValueProxy& operator=(const TValue& val)
+    //     {
+    //         table->insert(key, val);
+    //         return *this;
+    //     };
+    // };
+
+
+    TValue& operator [](const TKey& key)
+    {
+        auto result = search(key);
+        if (result != nullptr)
+        {
+            return *result;
+        }
+
+        // TValue val;
+        //
+        // insert(key, val);
+        //
+        // return this->operator[](key);
+        // return TValueProxy(this->shared_from_this(), key);
+    }
+
+    float loadFactor() const
+    {
+        return (float)size / (float)tableSize;
     }
 };
 
+
+// class H2
+// {
+// public:
+//     HashTable();
+//
+//     ~HashTable();
+//
+//     void insert(const TKey &key, const TValue &value);
+//
+//     bool exists(const TKey &key);
+//
+//     shared_ptr<TValue> search(const TKey &key) const;
+//
+//     TValue & operator [](const TKey &key);
+//
+//     float loadFactor() const;
+// };
 
 #endif //DS_WET2_WINTER_2024_2025_HASHTABLE_H

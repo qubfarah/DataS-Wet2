@@ -4,20 +4,25 @@
 #include "plains25a2.h"
 
 
-Plains::Plains() {
+Plains::Plains() : utils(this)
+{
 }
 
-Plains::~Plains() {
+Plains::~Plains()
+{
 }
 
-StatusType Plains::add_team(int teamId) {
+StatusType Plains::add_team(int teamId)
+{
     if (teamId <= 0) return StatusType::INVALID_INPUT;
 
     if (teams.exists(teamId)) return StatusType::FAILURE;
 
-    teams[teamId] = Team(teamId);
+    teams.insert(teamId, Team(teamId));
 
-    recordTokens[teamId] = RecordToken(teamId);
+    recordTokens.insert(teamId, RecordToken(teamId));;
+
+    teamMembership.makeset(teamId);
 
     // starting at 0
     utils.add_record_token(recordTokens[teamId], 0);
@@ -25,33 +30,23 @@ StatusType Plains::add_team(int teamId) {
     return StatusType::SUCCESS;
 }
 
-StatusType Plains::add_jockey(int jockeyId, int teamId) {
+StatusType Plains::add_jockey(int jockeyId, int teamId)
+{
     if (jockeyId <= 0 || teamId <= 0) return StatusType::INVALID_INPUT;
 
     const auto team = teams.search(teamId);
 
     if (utils.invalid(team)) return StatusType::FAILURE;
 
-    jockeys[jockeyId] = Jockey(jockeyId, team);
-    
-    auto set = jockeysTeamMembership.makeset(jockeyId);
-
-    // if the team does not have a set.
-    if(team->firstJockey == -1) {
-        team->firstJockey = jockeyId;
-    } else {
-        // this team is not empty, therefore merge jockey's set with team's set.
-        // auto teamSet = jockeysTeamMembership.find(team->firstJockey);
-
-        jockeysTeamMembership.unite(team->firstJockey, set);
-    }
-
+    jockeys.insert(jockeyId, Jockey(jockeyId, team->id));
 
     return StatusType::SUCCESS;
 }
 
-StatusType Plains::update_match(int victoriousJockeyId, int losingJockeyId) {
-    if (victoriousJockeyId <= 0 || losingJockeyId <= 0 || victoriousJockeyId == losingJockeyId) {
+StatusType Plains::update_match(int victoriousJockeyId, int losingJockeyId)
+{
+    if (victoriousJockeyId <= 0 || losingJockeyId <= 0 || victoriousJockeyId == losingJockeyId)
+    {
         return StatusType::INVALID_INPUT;
     }
 
@@ -60,7 +55,8 @@ StatusType Plains::update_match(int victoriousJockeyId, int losingJockeyId) {
 
     if (victorious == nullptr || losing == nullptr) return StatusType::FAILURE;
 
-    if (utils.inSameTeamMembership(victorious, losing)) {
+    if (utils.inSameTeamMembership(victorious, losing))
+    {
         return StatusType::FAILURE;
     }
 
@@ -71,13 +67,14 @@ StatusType Plains::update_match(int victoriousJockeyId, int losingJockeyId) {
     victorious->record += 1;
     losing->record -= 1;
 
-    utils.updateRecord(victoriousTeam, victoriousTeam.totalRecord+1);
-    utils.updateRecord(losingTeam, losingTeam.totalRecord-1);
+    utils.updateRecord(victoriousTeam, victoriousTeam.totalRecord + 1);
+    utils.updateRecord(losingTeam, losingTeam.totalRecord - 1);
 
     return StatusType::SUCCESS;
 }
 
-StatusType Plains::merge_teams(int teamId1, int teamId2) {
+StatusType Plains::merge_teams(int teamId1, int teamId2)
+{
     if (teamId1 <= 0 || teamId2 <= 0 || teamId1 == teamId2) return StatusType::INVALID_INPUT;
 
     const auto team1 = teams.search(teamId1);
@@ -92,27 +89,28 @@ StatusType Plains::merge_teams(int teamId1, int teamId2) {
     return StatusType::SUCCESS;
 }
 
-StatusType Plains::unite_by_record(int record) {
+StatusType Plains::unite_by_record(int record)
+{
     if (record <= 0) return StatusType::INVALID_INPUT;
 
     auto recordsList1 = records.search(record);
 
-    if(recordsList1 == nullptr) return StatusType::FAILURE;
+    if (recordsList1 == nullptr) return StatusType::FAILURE;
 
     RecordToken* record1 = *recordsList1;
 
     // we want exactly 1 in the list.
-    if(record1->next != nullptr) return StatusType::FAILURE;
-    
+    if (record1->next != nullptr) return StatusType::FAILURE;
+
 
     auto recordsList2 = records.search(-record);
 
-    if(recordsList2 == nullptr) return StatusType::FAILURE;
+    if (recordsList2 == nullptr) return StatusType::FAILURE;
 
     RecordToken* record2 = *recordsList2;
 
     // we want exactly 2 in the list.
-    if(record2->next != nullptr) return StatusType::FAILURE;
+    if (record2->next != nullptr) return StatusType::FAILURE;
 
 
     utils.merge_teams(record1->teamId, record2->teamId, true);
@@ -122,7 +120,8 @@ StatusType Plains::unite_by_record(int record) {
     return StatusType::FAILURE;
 }
 
-output_t<int> Plains::get_jockey_record(int jockeyId) {
+output_t<int> Plains::get_jockey_record(int jockeyId)
+{
     if (jockeyId <= 0) return StatusType::INVALID_INPUT;
 
     const auto jockey = jockeys.search(jockeyId);
@@ -131,7 +130,8 @@ output_t<int> Plains::get_jockey_record(int jockeyId) {
     return jockey->record;
 }
 
-output_t<int> Plains::get_team_record(int teamId) {
+output_t<int> Plains::get_team_record(int teamId)
+{
     if (teamId <= 0) return StatusType::INVALID_INPUT;
 
     const auto team = teams.search(teamId);

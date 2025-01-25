@@ -10,13 +10,13 @@
 class Jockey {
 public:
     int id;
-    int teamId;
+    int originalTeamId;
     int record;
 
-    Jockey(int jockeyId, shared_ptr<Team>); 
+Jockey() = default;
 
     Jockey(int jockeyId, int teamId)
-            : id(jockeyId), teamId(teamId), record(0) {}
+            : id(jockeyId), originalTeamId(teamId), record(0) {}
 };
 
 
