@@ -8,106 +8,53 @@ static const int HASH_TABLE_SIZE = 1011; // prime num for hash table size
 
 
 
-Plains::Plains()
-{
+Plains::Plains() {
 
 }
 
-Plains::~Plains()
-{
-    // Free allocated memory for teams and jockeys
-    for (int i = 0; i < teams.get_capacity(); ++i) {
-        Team* team;
-        if (teams.find(i, team)) {
-            delete team;
-        }
-    }
-    for (int i = 0; i < jockeys.get_capacity(); ++i) {
-        Jockey* jockey;
-        if (jockeys.find(i, jockey)) {
-            delete jockey;
-        }
-    }
-//
-//   // free jockey table
-//   for(int i = 0; i< HASH_TABLE_SIZE; i++) {
-//       Jockey *current = jockeyTable[i];
-//       while (current) {
-//           Jockey *temp = current;
-//           current = current->next;
-//           delete temp;
-//       }
-//   }
-//
-//    // free team table
-//    for(int i = 0; i< HASH_TABLE_SIZE; i++) {
-//        Team *current = teamTable[i];
-//        while (current) {
-//            Team *temp = current;
-//            current = current->next;
-//            delete temp;
-//        }
-//    }
+Plains::~Plains() {
 
 }
 
-StatusType Plains::add_team(int teamId)
-{
+StatusType Plains::add_team(int teamId) {
 
-    if (teamId <= 0) return INVALID_INPUT;
+    if (teamId <= 0) return StatusType::INVALID_INPUT;
 
-    if (!teams.insert(teamId, new Team(teamId))) {
-        return FAILURE; // Team already exists
+    if (teams.find(teamId) != nullptr) {
+        return StatusType::FAILURE; // team already exists
+    }else{
+        teams.insert(teamId, new Team(teamId));
     }
-    return SUCCESS;
+    Team* team1 = new Team(1);
+    team1->parent = team1; // Points to itself
+    team1->rank = 1;
+    return StatusType::SUCCESS;
 
-//    checkValidity(teamId); // checks if negative
-//    if(findTeam(teamId))
-//        return StatusType::FAILURE;
-//
-//    int index = hash(teamId);
-//    Team* newTeam = new Team{teamId, 0 , teamId, teamTable[index]};
-//    teamTable[index] = newTeam;
-//
-//    return StatusType::FAILURE;
 }
 
-StatusType Plains::add_jockey(int jockeyId, int teamId)
-{
-    if (jockeyId <= 0 || teamId <= 0) return INVALID_INPUT;
+StatusType Plains::add_jockey(int jockeyId, int teamId) {
+    if (jockeyId <= 0 || teamId <= 0) return StatusType::INVALID_INPUT;
 
-    Team* team;
-    if (!teams.find(teamId, team)) {
-        return FAILURE; // Team does not exist
+    if ((jockeys.find(jockeyId) != nullptr) || teams.find(teamId) == nullptr) {
+        return StatusType::FAILURE; // Jockey already exists or team doesn't exist
     }
 
-    if (!jockeys.insert(jockeyId, new Jockey(jockeyId, teamId))) {
-        return FAILURE; // Jockey already exists
-    }
+    Jockey *newjockey = new Jockey(jockeyId, teamId);
+    jockeys.insert(jockeyId, newjockey);
 
-    return SUCCESS;
+    unite(newjockey ,teams.find(teamId)->head);
 
-//    checkValidity(teamId); // checks if negative
-//    checkValidity(jockeyId); // checks if negative
-//    if(findTeam(teamId) || findTeam(jockeyId))
-//        return StatusType::FAILURE;
-//
-//    int index = hash(teamId);
-//    Team* newJockey = new Jockey{jockeyId,teamId, 0  , jockeyTable[index]};
-//    teamTable[index] = newTeam;
-//
-//    return StatusType::FAILURE;
+    return StatusType::SUCCESS;
 }
 
-StatusType Plains::update_match(int victoriousJockeyId, int losingJockeyId)
-{
+StatusType Plains::update_match(int victoriousJockeyId, int losingJockeyId) {
     if (victoriousJockeyId <= 0 || losingJockeyId <= 0 || victoriousJockeyId == losingJockeyId) {
         return StatusType::INVALID_INPUT;
     }
 
-    Jockey* victorious;
-    Jockey* losing;
-    if (!jockeys.find(victoriousJockeyId, victorious) || !jockeys.find(losingJockeyId, losing)) {
+    Jockey *victorious;
+    Jockey *losing;
+    if (jockeys.find(victoriousJockeyId, victorious) == nullptr || jockeys.find(losingJockeyId, losing) == nullptr) {
         return StatusType::FAILURE; // One or both jockeys do not exist
     }
 
@@ -116,21 +63,28 @@ StatusType Plains::update_match(int victoriousJockeyId, int losingJockeyId)
     }
 
     victorious->record += 1;
+    teams.find(victorious->teamId, new Team(victorious->teamId)) -> updateTotalRecord(1);
+
     losing->record -= 1;
+    teams.find(losing->teamId, new Team(losing->teamId)) -> updateTotalRecord(-1);
+
+    records.insert(victorious->teamId, new Team(victorious->teamId));
+    records.insert(losing->teamId, new Team(losing->teamId));
+
     return StatusType::SUCCESS;
 }
 
-StatusType Plains::merge_teams(int teamId1, int teamId2)
-{
+StatusType Plains::merge_teams(int teamId1, int teamId2) {
     if (teamId1 <= 0 || teamId2 <= 0 || teamId1 == teamId2) return StatusType::INVALID_INPUT;
 
-    Team* team1;
-    Team* team2;
-    if (!teams.find(teamId1, team1) || !teams.find(teamId2, team2)) {
+    Jockey *newjockey = new Jockey(jockeyId, teamId);
+    Team *team1 = new Team(teamId1);
+    Team *team2 = new Team(teamId2);
+    if (teams.find(teamId1, team1) == nullptr || teams.find(teamId2, team2) == nullptr) {
         return StatusType::FAILURE; // One or both teams do not exist
     }
 
-    unionFind.unite(teamId1, teamId2);
+    Uptree_teams.unite(team1, team2);
 
     if (team1->totalRecord < team2->totalRecord) {
         team1->id = team2->id;
@@ -141,15 +95,18 @@ StatusType Plains::merge_teams(int teamId1, int teamId2)
     return StatusType::SUCCESS;
 }
 
-StatusType Plains::unite_by_record(int record)
-{
+StatusType Plains::unite_by_record(int record) {
     if (record <= 0) return StatusType::INVALID_INPUT;
 
-    Team* positiveRecordTeam = nullptr;
-    Team* negativeRecordTeam = nullptr;
+    if (records.find(teamId1, team1) == nullptr || teams.find(teamId2, team2) == nullptr) {
+        return StatusType::FAILURE; // One or both teams do not exist
+    }
+
+    Team *positiveRecordTeam = nullptr;
+    Team *negativeRecordTeam = nullptr;
 
     for (int i = 0; i < teams.get_capacity(); ++i) {
-        Team* team;
+        Team *team;
         if (teams.find(i, team)) {
             if (team->totalRecord == record) {
                 positiveRecordTeam = team;
@@ -166,12 +123,11 @@ StatusType Plains::unite_by_record(int record)
     return StatusType::FAILURE;
 }
 
-output_t<int> Plains::get_jockey_record(int jockeyId)
-{
+output_t<int> Plains::get_jockey_record(int jockeyId) {
     if (jockeyId <= 0) return INVALID_INPUT;
 
-    Jockey* jockey;
-    if (!jockeys.find(jockeyId, jockey)) {
+    Jockey *jockey;
+    if (jockeys.find(jockeyId, jockey) == nullptr) {
         return StatusType::FAILURE; // Jockey does not exist
     }
 
@@ -180,15 +136,14 @@ output_t<int> Plains::get_jockey_record(int jockeyId)
     return 0;
 }
 
-output_t<int> Plains::get_team_record(int teamId)
-{
+output_t<int> Plains::get_team_record(int teamId) {
     if (teamId <= 0) return INVALID_INPUT;
 
-    Team* team;
-    if (!teams.find(teamId, team)) {
-        return FAILURE; // Team does not exist
+    Team *team;
+    if (teams.find(teamId, team) == nullptr) {
+        return StatusType::FAILURE; // Team does not exist
     }
 
-     return team->totalRecord;
+    return team->totalRecord;
     return 0;
 }

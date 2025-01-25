@@ -25,13 +25,19 @@
 
 using namespace std;
 
-class Plains
-{
-private:
-    HashTable<int, shared_ptr<Team>> teams;
-    HashTable<int, shared_ptr<Jockey>> jockeys;
+//template<typename T>
 
-    UnionFind unionFind;
+class Plains {
+private:
+
+    UnionFind<Jockey> Uptree_teams;
+    UnionFind<Team> Uptree_records;
+
+    HashTable<int, Jockey> jockeys;
+    HashTable<int, Team> teams;
+    HashTable<int, Team> records;
+
+
 
 public:
     // <DO-NOT-MODIFY> {

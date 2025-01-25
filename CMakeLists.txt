@@ -10,13 +10,16 @@ add_executable(DS_wet2_Winter_2024_2025
         plains25a2.cpp
         plains25a2.h
         wet2util.h
-        Team.cpp
         Team.h
-        Jockey.cpp
         Jockey.h
         DynamicArray.cpp
         UnionFind.cpp
         DynamicArray.h
         HashTable.h
+        HashTable.cpp
         UnionFind.h
+        UnionFind.cpp
+        HashTable.cpp
+
+
 )

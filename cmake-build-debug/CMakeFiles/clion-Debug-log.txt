@@ -1,13 +1,4 @@
 /Applications/CLion.app/Contents/bin/cmake/mac/aarch64/bin/cmake -DCMAKE_BUILD_TYPE=Debug -DCMAKE_MAKE_PROGRAM=/Applications/CLion.app/Contents/bin/ninja/mac/aarch64/ninja -G Ninja -S "/Users/farahqub/Desktop/semester 4/mvne/hws/DS_wet2_Winter_2024-2025" -B "/Users/farahqub/Desktop/semester 4/mvne/hws/DS_wet2_Winter_2024-2025/cmake-build-debug"
 -- Configuring done (0.0s)
-CMake Error at CMakeLists.txt:8 (add_executable):
-  Cannot find source file:
-
-    cmake-build-debug/UnionFind.cpp
-
-
-CMake Error at CMakeLists.txt:8 (add_executable):
-  No SOURCES given to target: DS_wet2_Winter_2024_2025
-
-
-CMake Generate step failed.  Build files cannot be regenerated correctly.
+-- Generating done (0.0s)
+-- Build files have been written to: /Users/farahqub/Desktop/semester 4/mvne/hws/DS_wet2_Winter_2024-2025/cmake-build-debug

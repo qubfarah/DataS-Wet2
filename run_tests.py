@@ -1,11 +1,8 @@
-
-
-import os
 import argparse
+import os
 import subprocess
 
-
-COMPILATION_FLAGS ="-std=c++11 -DNDEBUG -Wall"
+COMPILATION_FLAGS = "-std=c++11 -DNDEBUG -Wall"
 TIMEOUT = 15
 
 
@@ -49,16 +46,18 @@ def run_test(exe_file, test_id, tests_dir):
 
 def main():
     parser = argparse.ArgumentParser(description="Generate Tests.")
-    parser.add_argument("--tests_dir", type=str, default="./tests/", help="Path to the dir with the tests to run (default: './tests/').")
-    parser.add_argument("--code_dir", type=str, default="./", help="Path to the dir with the code to compile and test (default: './').")
+    parser.add_argument("--tests_dir", type=str, default="./tests/",
+                        help="Path to the dir with the tests to run (default: './tests/').")
+    parser.add_argument("--code_dir", type=str, default="./",
+                        help="Path to the dir with the code to compile and test (default: './').")
     parser.add_argument("--compiler_path", type=str, default="g++", help="Path to the g++ compiler (default: 'g++').")
     parser.add_argument("--clean", action="store_true", help="Remove all .res files from the tests dir.")
     parser.add_argument("--abort_on_fail", action="store_true", help="Abort on first test that fails.")
     parser.add_argument(
-        "-t", "--tests", 
-        type=int, 
+        "-t", "--tests",
+        type=int,
         nargs="*",
-        help="List of test IDs to run (default: run all tests).", 
+        help="List of test IDs to run (default: run all tests).",
         default=None
     )
     args = parser.parse_args()
@@ -87,7 +86,7 @@ def main():
     for test_id in tests:
         if not run_test(exe_file, test_id, args.tests_dir) and args.abort_on_fail:
             return 0
-    
+
     return 0
 
 

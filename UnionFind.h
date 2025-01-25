@@ -6,47 +6,19 @@
 #define DS_WET2_WINTER_2024_2025_UNIONFIND_H
 
 #include <memory>
-
+#include <HashTable.h>
 #include "DynamicArray.h"
 
-// class _UnionFind
-// {
-// private:
-//     DynamicArray<int> parent;
-//     DynamicArray<int> rank;
-//
-// public:
-//     explicit UnionFind(const int& n);
-//
-//     int find(const int& x) const;
-//
-//     void unite(const int& x, const int& y);
-// };
+template <typename T>
+ class UnionFind
+ {
+ public:
+     explicit UnionFind();
 
-class UnionFind
-{
-private:
-    struct Node
-    {
-        int value;
-        Node* head;
-        Node* next;
-    };
+     T* find(T* object);
 
-    DynamicArray<Node> A;
-public:
-    class Set
-    {
-
-    };
-public:
-    explicit UnionFind(const int& n);
-
-    // returns the set of the index
-    std::shared_ptr<Set> find(const int& x) const;
-
-    void unite(const int& x, const int& y);
-};
+     void unite(T* object1, T* object2);
+ };
 
 
 #endif //DS_WET2_WINTER_2024_2025_UNIONFIND_H

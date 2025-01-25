@@ -1,90 +1,95 @@
-//
-// Created by Farah Qub on 17/01/2025.
-//
+#include <iostream>
+#include  "HashTable.h"
 
-template <typename Key, typename Value>
+
+
+// Node in the linked list for the hash table
+template <typename T>
+struct LinkedListNode {
+    int key;               // Key (e.g., ID)
+    T* object;             // Pointer to the object (generic type)
+    LinkedListNode* next;  // Pointer to the next node in the list
+
+    LinkedListNode(int key, T* object)
+            : key(key), object(object), next(nullptr) {}
+};
+
+// Template class for HashTable
+template <typename T>
 class HashTable {
 private:
-    struct Node {
-        Key key;
-        Value value;
-        Node* next;
-        Node(const Key& k, const Value& v) : key(k), value(v), next(nullptr) {}
-    };
+    LinkedListNode<T>** table; // Array of pointers to linked lists
+    int capacity;              // Number of buckets in the hash table
 
-    Node** table;
-    int capacity;
-    int size;
-
-    int hash(const Key& key) const {
+    // Hash function to map keys to buckets
+    int hashFunction(int key) const {
         return key % capacity;
     }
 
 public:
-    explicit HashTable(const int& cap = 10) : capacity(cap), size(0) {
-        table = new Node*[capacity];
+    // Constructor
+    HashTable(int capacity) : capacity(capacity) {
+        table = new LinkedListNode<T>*[capacity];
         for (int i = 0; i < capacity; ++i) {
             table[i] = nullptr;
         }
     }
 
+    // Destructor
     ~HashTable() {
         for (int i = 0; i < capacity; ++i) {
-            Node* current = table[i];
-            while (current) {
-                Node* temp = current;
-                current = current->next;
+            LinkedListNode<T>* node = table[i];
+            while (node) {
+                LinkedListNode<T>* temp = node;
+                node = node->next;
                 delete temp;
             }
         }
         delete[] table;
     }
 
-    bool insert(const Key& key, const Value& value) {
-        int idx = hash(key);
-        Node* current = table[idx];
-        while (current) {
-            if (current->key == key) return false; // Key already exists
-            current = current->next;
-        }
-        Node* newNode = new Node(key, value);
-        newNode->next = table[idx];
-        table[idx] = newNode;
-        size++;
-        return true;
+    // Insert a key with a pointer to the object
+    void insert(int key, T* object) {
+        int index = hashFunction(key);
+        LinkedListNode<T>* newNode = new LinkedListNode<T>(key, object);
+
+        // Insert at the head of the linked list
+        newNode->next = table[index];
+        table[index] = newNode;
     }
 
-    bool find(const Key& key, Value& value) const {
-        int idx = hash(key);
-        Node* current = table[idx];
-        while (current) {
-            if (current->key == key) {
-                value = current->value;
-                return true;
+    // Find a key and return its object pointer
+    T* find(int key) const {
+        int index = hashFunction(key);
+        LinkedListNode<T>* node = table[index];
+
+        while (node) {
+            if (node->key == key) {
+                return node->object;
             }
-            current = current->next;
+            node = node->next;
         }
-        return false;
+        return nullptr; // Key not found
     }
 
-    bool remove(const Key& key) {
-        int idx = hash(key);
-        Node* current = table[idx];
-        Node* prev = nullptr;
-        while (current) {
-            if (current->key == key) {
+    // Remove a key from the hash table
+    void remove(int key) {
+        int index = hashFunction(key);
+        LinkedListNode<T>* node = table[index];
+        LinkedListNode<T>* prev = nullptr;
+
+        while (node) {
+            if (node->key == key) {
                 if (prev) {
-                    prev->next = current->next;
+                    prev->next = node->next;
                 } else {
-                    table[idx] = current->next;
+                    table[index] = node->next;
                 }
-                delete current;
-                size--;
-                return true;
+                delete node;
+                return;
             }
-            prev = current;
-            current = current->next;
+            prev = node;
+            node = node->next;
         }
-        return false;
     }
 };
