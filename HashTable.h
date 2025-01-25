@@ -17,6 +17,7 @@ template <typename TKey, typename TValue>
 class HashTable : public enable_shared_from_this<HashTable<TKey, TValue>>
 {
     const float MAX_LOAD_FACTOR = 0.75;
+    const int PRIME = 997; // a large prime number for hashing
 
     class Pair
     {
@@ -42,13 +43,18 @@ class HashTable : public enable_shared_from_this<HashTable<TKey, TValue>>
 
     int hash(const TKey& key) const
     {
-        return (hash_a * key + hash_b) % tableSize;
+        //Universal hash function
+        return ((hash_a * key + hash_b) % PRIME) % tableSize;
     }
 
     void resize()
     {
-        auto oldSize = tableSize;
+        int oldSize = tableSize;
         tableSize *= 2;
+
+         // Generate a new random hash function
+        generateHashFunction();
+        
         auto newTable = new Table[tableSize];
 
         size = 0;
@@ -76,6 +82,12 @@ class HashTable : public enable_shared_from_this<HashTable<TKey, TValue>>
         size++;
     }
 
+    void generateHashFunction()
+    {
+        hash_a = std::rand() % PRIME + 1; // a should be non-zero
+        hash_b = std::rand() % PRIME;
+    }
+
 public:
     HashTable() : tableSize(10), size(0)
     {
@@ -83,11 +95,8 @@ public:
 
         // Seed for random number generation
         std::srand(std::time(nullptr));
-        // Generate random coefficients a and b
-        hash_a = std::rand() % tableSize + 1; // a should be non-zero
-        hash_b = std::rand() % tableSize;
-        // hash_a = 5;
-        // hash_b = 1;
+    // Generate random coefficients for the hash function
+        generateHashFunction();
     }
 
     ~HashTable()
@@ -163,7 +172,10 @@ public:
         {
             return *result;
         }
-
+        
+        TValue default_value{};
+        insert(key, default_value);
+        return *search(key);
         // TValue val;
         //
         // insert(key, val);
