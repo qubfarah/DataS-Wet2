@@ -24,6 +24,7 @@ add_executable(DS_wet2_Winter_2024_2025
         Team.h
         Jockey.cpp
         Jockey.h
+        plainsUtils.cpp
 )
 
 target_link_libraries(DS_wet2_Winter_2024_2025 PUBLIC core)

@@ -57,6 +57,8 @@ public:
 
 
     void insert(T);
+
+    void remove(T);
 };
 
 template <typename T>

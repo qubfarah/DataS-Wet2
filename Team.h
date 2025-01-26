@@ -18,7 +18,7 @@ public:
     Team() = default;
 
 
-    Team(int teamId) : id(teamId), totalRecord(0) {}
+    Team(int teamId) : id(teamId), totalRecord(0), isMerged(false) {}
 
     void deactivate() {
         isMerged = true;
