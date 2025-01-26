@@ -34,8 +34,9 @@ public:
     int teamId;
     RecordToken() = default;
 
-    RecordToken(int teamId) : teamId(teamId), next(nullptr), previous(nullptr)
+    RecordToken(int teamId) : teamId(teamId), next(nullptr)
     {
+        clearPrevious();
     }
 
     shared_ptr<RecordToken> next;
@@ -45,6 +46,11 @@ public:
     bool operator==(const RecordToken& other)
     {
         return &other == this;
+    }
+
+    void clearPrevious()
+    {
+        previous = std::shared_ptr<RecordToken>(nullptr);
     }
 };
 
@@ -66,11 +72,14 @@ private:
     HashTable<int, RecordToken> recordTokens;
 
     // record->token
-    HashTable<int, DoubleLinkedList<RecordToken>> records;
+    HashTable<int, RecordToken> records;
 
     class PlainsUtils
     {
         Plains* p;
+
+    private:
+        void removeTeamFromRecord(const shared_ptr<Team>& team) ;
 
     public:
         PlainsUtils(Plains* _p);
@@ -78,22 +87,24 @@ private:
         bool inSameTeamMembership(const shared_ptr<Jockey>& a, const shared_ptr<Jockey>& b) const;
 
         // O(log(m))
-        Team& team(const shared_ptr<Jockey>& a) const;
+        shared_ptr<Team> team(const shared_ptr<Jockey>& a) const;
 
         static bool invalid(const shared_ptr<Team> &team);
 
-        void updateRecord(const shared_ptr<Team>& team, int record);
+        void updateRecord(const shared_ptr<Team>& team, const int& record);
 
-        void removeTeamFromRecord(const shared_ptr<Team>& team);
+        void add_record_token(const shared_ptr<RecordToken>& token, const int& record) const;
 
-        void add_record_token(shared_ptr<RecordToken> token, int record);
+        void merge_teams(shared_ptr<Team> team1, shared_ptr<Team> team2, bool mergeToFirst, bool dryMerge);
 
-        void merge_teams(const int& teamId1, const int& teamId2, bool mergeToFirst);
-
-        void merge_teams(shared_ptr<Team> team1, shared_ptr<Team> team2, bool mergeToFirst);
+        static int recordKey(const int& record);
     };
 
     PlainsUtils utils;
+
+    //TODO: remove
+public:
+    int commandId = 0;
 
 public:
     // <DO-NOT-MODIFY> {

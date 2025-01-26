@@ -30,6 +30,8 @@ int main()
     string op;
     while (cin >> op)
     {
+        obj->commandId++;
+
         if (!op.compare("add_team")) {
             cin >> d1;
             print(op, obj->add_team(d1));

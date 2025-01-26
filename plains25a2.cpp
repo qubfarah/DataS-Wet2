@@ -3,6 +3,18 @@
 
 #include "plains25a2.h"
 
+#include <cassert>
+
+#define ERROR_GUARD(x) try {x} catch(...) { return StatusType::ALLOCATION_ERROR; }
+#define EXCEPTION_GUARD(code)         \
+try {                             \
+code                          \
+} catch (const std::exception &e) \
+{                                 \
+std::cerr << "Exception: " << e.what() << std::endl; \
+} catch (...) {                   \
+std::cerr << "Unknown exception occurred." << std::endl; \
+}
 
 Plains::Plains() : utils(this)
 {
@@ -18,6 +30,7 @@ StatusType Plains::add_team(int teamId)
 
     if (teams.exists(teamId)) return StatusType::FAILURE;
 
+
     teams.insert(teamId, Team(teamId));
 
     recordTokens.insert(teamId, RecordToken(teamId));;
@@ -25,7 +38,7 @@ StatusType Plains::add_team(int teamId)
     teamMembership.makeset(teamId);
 
     // starting at 0
-    utils.add_record_token(recordTokens[teamId], 0);
+    utils.add_record_token(recordTokens.search(teamId), 0);
 
     return StatusType::SUCCESS;
 }
@@ -33,6 +46,8 @@ StatusType Plains::add_team(int teamId)
 StatusType Plains::add_jockey(int jockeyId, int teamId)
 {
     if (jockeyId <= 0 || teamId <= 0) return StatusType::INVALID_INPUT;
+
+    if (jockeys.exists(jockeyId)) return StatusType::FAILURE;
 
     const auto team = teams.search(teamId);
 
@@ -67,8 +82,14 @@ StatusType Plains::update_match(int victoriousJockeyId, int losingJockeyId)
     victorious->record += 1;
     losing->record -= 1;
 
-    utils.updateRecord(victoriousTeam, victoriousTeam.totalRecord + 1);
-    utils.updateRecord(losingTeam, losingTeam.totalRecord - 1);
+    utils.updateRecord(victoriousTeam, victoriousTeam->totalRecord + 1);
+    utils.updateRecord(losingTeam, losingTeam->totalRecord - 1);
+
+    // assert(records[victoriousTeam->totalRecord + 1] == recordTokens[victoriousTeam->id]);
+
+    auto r1 = records.search(std::abs(victoriousTeam->totalRecord));
+    auto r2 = records.search(std::abs(losingTeam->totalRecord));
+
 
     return StatusType::SUCCESS;
 }
@@ -80,44 +101,57 @@ StatusType Plains::merge_teams(int teamId1, int teamId2)
     const auto team1 = teams.search(teamId1);
     const auto team2 = teams.search(teamId2);
 
-    if (team1 == nullptr || team2 == nullptr) return StatusType::FAILURE;
+    if (utils.invalid(team1) || utils.invalid(team2)) return StatusType::FAILURE;
 
     bool mergeToFirst = team1->totalRecord >= team2->totalRecord;
 
-    utils.merge_teams(team1, team2, mergeToFirst);
+    utils.merge_teams(team1, team2, mergeToFirst, false);
 
     return StatusType::SUCCESS;
 }
+
+#include <stdio.h>
 
 StatusType Plains::unite_by_record(int record)
 {
     if (record <= 0) return StatusType::INVALID_INPUT;
 
-    auto recordsList1 = records.search(record);
-
-    if (recordsList1 == nullptr) return StatusType::FAILURE;
-
-    RecordToken* record1 = *recordsList1;
-
-    // we want exactly 1 in the list.
-    if (record1->next != nullptr) return StatusType::FAILURE;
+    auto recordsList = records.search(record);
+    if (recordsList == nullptr) return StatusType::FAILURE;
 
 
-    auto recordsList2 = records.search(-record);
+    for(auto team : teams)
+    {
+        if(team == nullptr || utils.invalid(team)) continue;
+        std::cout << team->id << ": " <<team->totalRecord << std::endl;
+    }
 
-    if (recordsList2 == nullptr) return StatusType::FAILURE;
+    if(commandId==170)
+    {
+        auto team2 = teams.search(5018);
+        auto x = recordTokens.search(5018);
+    }
 
-    RecordToken* record2 = *recordsList2;
+    auto first = recordsList;
+    auto second = first->next;
 
-    // we want exactly 2 in the list.
-    if (record2->next != nullptr) return StatusType::FAILURE;
+    // has 1 or more than 2:
+    // if(second == nullptr) return StatusType::ALLOCATION_ERROR;
+    if (second == nullptr || second->next != nullptr) return StatusType::FAILURE;
 
+    auto team1 = teams.search(first->teamId);
+    auto team2 = teams.search(second->teamId);
 
-    utils.merge_teams(record1->teamId, record2->teamId, true);
+    assert(!(utils.invalid(team1) && utils.invalid(team2)));
+
+    // they must have opposite signs
+    if (team1->totalRecord * team2->totalRecord > 0) return StatusType::FAILURE;
+
+    utils.merge_teams(team1, team2, team1->totalRecord > 0, false);
 
 
     // No such teams found
-    return StatusType::FAILURE;
+    return StatusType::SUCCESS;
 }
 
 output_t<int> Plains::get_jockey_record(int jockeyId)

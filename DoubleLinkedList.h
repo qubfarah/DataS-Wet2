@@ -35,7 +35,7 @@ private:
 public:
     class Iterator
     {
-    private:
+    public:
         shared_ptr<Node> current;
 
     public:

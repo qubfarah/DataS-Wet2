@@ -13,7 +13,7 @@ public:
     int originalTeamId;
     int record;
 
-Jockey() = default;
+    Jockey() = default;
 
     Jockey(int jockeyId, int teamId)
             : id(jockeyId), originalTeamId(teamId), record(0) {}
