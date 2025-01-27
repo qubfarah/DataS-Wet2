@@ -1,5 +1,5 @@
 //
-// Created by jamal on 1/24/2025.
+// Created by jamal on 24/01/2025.
 //
 
 #ifndef DOUBLELINKEDLIST_H
@@ -57,8 +57,6 @@ public:
 
 
     void insert(T);
-
-    void remove(T);
 };
 
 template <typename T>
@@ -115,25 +113,6 @@ void DoubleLinkedList<T>::insert(T data)
 
     head = newNode;
 }
-
-
-// class H2
-// {
-// public:
-//     HashTable();
-//
-//     ~HashTable();
-//
-//     void insert(const TKey &key, const TValue &value);
-//
-//     bool exists(const TKey &key);
-//
-//     shared_ptr<TValue> search(const TKey &key) const;
-//
-//     TValue & operator [](const TKey &key);
-//
-//     float loadFactor() const;
-// };
 
 
 #endif //DOUBLELINKEDLIST_H

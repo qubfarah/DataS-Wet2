@@ -6,41 +6,52 @@
 
 #include "plains25a2.h"
 
-
-Plains::PlainsUtils::PlainsUtils(Plains *_p) : p(_p) {
+Plains::PlainsUtils::PlainsUtils(Plains *_p) : p(_p)
+{
 }
 
-bool Plains::PlainsUtils::inSameTeamMembership(const shared_ptr<Jockey> &a, const shared_ptr<Jockey> &b) const {
-    return p->teamMembership.find(a->originalTeamId) == p->teamMembership.find(b->originalTeamId);
+// O(log(m))
+bool Plains::PlainsUtils::inSameTeamMembership(const shared_ptr<Jockey> &a, const shared_ptr<Jockey> &b) const
+{
+    return p->teamMembership.find(a->getOriginalTeamId()) == p->teamMembership.find(b->getOriginalTeamId());
 }
 
-shared_ptr<Team> Plains::PlainsUtils::team(const shared_ptr<Jockey> &a) const {
-    const auto &teamSetMembership = p->teamMembership.find(a->originalTeamId);
+// O(log(m))
+shared_ptr<Team> Plains::PlainsUtils::team(const shared_ptr<Jockey> &a) const
+{
+    const auto &teamSetMembership = p->teamMembership.find(a->getOriginalTeamId());
     int teamSet = p->membershipIdentifier[teamSetMembership];
 
     return p->teams.search(teamSet);
 }
 
-bool Plains::PlainsUtils::invalid(const shared_ptr<Team> &team) {
-    return team == nullptr || team->isMerged;
+// O(1)
+bool Plains::PlainsUtils::invalid_team(const shared_ptr<Team> &team)
+{
+    return team == nullptr || !team->isValid();
 }
 
-
-int Plains::PlainsUtils::recordKey(const int &record) {
+// O(1)
+int Plains::PlainsUtils::recordKey(const int &record)
+{
     return std::abs(record);
 }
 
-void Plains::PlainsUtils::add_record_token(const shared_ptr<RecordToken> &token, const int &record) const {
-    const shared_ptr<RecordToken> result = p->records.search(record);
+// O(1)
+void Plains::PlainsUtils::add_record_token(const shared_ptr<Team::RecordToken> &token, const int &record) const
+{
+    const shared_ptr<Team::RecordToken> result = p->records.search(record);
 
     // must be removed before added
-    assert(token->previous.lock() == nullptr && token->next == nullptr);
+    assert(token->getPrevious().lock() == nullptr && token->getNext() == nullptr);
 
-    if (result != nullptr) {
-        assert(result->previous.lock() == nullptr);
+    if (result != nullptr)
+    {
+        assert(result->getPrevious().lock() == nullptr);
 
-        result->previous = token;
-        token->next = result;
+        result->setPrevious(token);
+
+        token->setNext(result);
     }
 
     p->records.upsert(record, token);
@@ -48,149 +59,74 @@ void Plains::PlainsUtils::add_record_token(const shared_ptr<RecordToken> &token,
     assert(p->records.search(record) == token);
 }
 
-
-void Plains::PlainsUtils::updateRecord(const shared_ptr<Team> &team, const int &record) {
-    auto teamToken = p->recordTokens.search(team->id);
+// O(1)
+void Plains::PlainsUtils::update_record(const shared_ptr<Team> &team, const int &record)
+{
+    auto teamToken = p->recordTokens.search(team->getId());
 
     removeTeamFromRecord(team);
 
     add_record_token(teamToken, recordKey(record));
 
-    team->totalRecord = record;
+    team->updateRecord(record);
 }
 
+// O(1)
+void Plains::PlainsUtils::removeTeamFromRecord(const shared_ptr<Team> &team)
+{
+    auto teamToken = p->recordTokens.search(team->getId());
 
-void Plains::PlainsUtils::removeTeamFromRecord(const shared_ptr<Team> &team) {
-    auto teamToken = p->recordTokens.search(team->id);
-
-    const int teamRecord = recordKey(team->totalRecord);
-    auto next = teamToken->next;
+    const int teamRecord = recordKey(team->getTotalRecord());
+    auto next = teamToken->getNext();
 
     // if the team is the first at the head
     if (
         p->records.search(
-            teamRecord
-        ) == teamToken) {
+            teamRecord) == teamToken)
+    {
         // updates head of list
         p->records.upsert(teamRecord, next);
 
         // remove this node from link
-        if (next != nullptr) {
+        if (next != nullptr)
+        {
             next->clearPrevious();
         }
-    } else {
-        if (auto previous = teamToken->previous.lock()) {
-            previous->next = next;
-            if (next != nullptr) {
-                next->previous = previous;
+    }
+    else
+    {
+        if (auto previous = teamToken->getPrevious().lock())
+        {
+            previous->setNext(next);
+            if (next != nullptr)
+            {
+                next->setPrevious(previous);
             }
         }
     }
+
     teamToken->clearPrevious();
-    teamToken->next = nullptr;
+    teamToken->clearNext();
 }
 
-
-void Plains::PlainsUtils::merge_teams(shared_ptr<Team> team1, shared_ptr<Team> team2, bool mergeToFirst,
-                                      bool dryMerge) {
+// O(log(m))
+void Plains::PlainsUtils::merge_teams(shared_ptr<Team> team1, shared_ptr<Team> team2, bool mergeToFirst)
+{
     auto toTeam = mergeToFirst ? team1 : team2;
     auto fromTeam = mergeToFirst ? team2 : team1;
 
-    assert(!(invalid(toTeam)&&invalid(fromTeam)));
+    assert(!(invalid_team(toTeam) && invalid_team(fromTeam)));
 
     removeTeamFromRecord(fromTeam);
 
-    updateRecord(toTeam, toTeam->totalRecord + fromTeam->totalRecord);
+    update_record(toTeam, toTeam->getTotalRecord() + fromTeam->getTotalRecord());
 
-    p->teamMembership.unite(toTeam->id, fromTeam->id);
+    p->teamMembership.unite(toTeam->getId(), fromTeam->getId());
 
-    int resultSet = p->teamMembership.find(toTeam->id);
+    int resultSet = p->teamMembership.find(toTeam->getId());
 
-    p->membershipIdentifier.upsert(resultSet, toTeam->id);
-
+    // it's always update since both sets existed before.
+    p->membershipIdentifier.upsert(resultSet, toTeam->getId());
 
     fromTeam->deactivate();
 }
-
-//     bool inSameTeamMembership(const shared_ptr<Jockey> &a, const shared_ptr<Jockey> &b) const {
-//     }
-//
-//     // O(log(m))
-//     Team &team(const shared_ptr<Jockey> &a) const {
-//         const auto &teamSet = p->teamMembership.find(a->id);
-//
-//         return p->teams[teamSet];
-//     }
-//
-//     static bool invalid(const shared_ptr<Team> &team) {
-//         return team == nullptr || team->isMerged;
-//     }
-//
-//     void updateRecord(Team &team, int record) {
-//         auto &teamToken = p->recordTokens[team.id];
-//
-//         const auto nextRecord = p->records.search(record);
-//         if (nextRecord == nullptr) {
-//             p->records.insert(record, &teamToken);
-//         }
-//
-//         // if the team token is the first in the double linked list.
-//         removeTeamFromRecord(team);
-//
-//         add_record_token(teamToken, record);
-//
-//         team.totalRecord = record;
-//     }
-//
-//     void removeTeamFromRecord(Team &team) {
-//         auto &teamToken = p->recordTokens[team.id];
-//
-//         // if the team is the first at the head
-//         if (p->records[team.totalRecord] == &teamToken) {
-//             auto next = teamToken.next;
-//
-//             p->records[team.totalRecord] = next;
-//             // remove this node from link
-//             if (next != nullptr) {
-//                 next->previous = nullptr;
-//             }
-//
-//             teamToken.previous = nullptr;
-//             teamToken.next = nullptr;
-//         } else {
-//             if (teamToken.previous != nullptr) {
-//                 teamToken.previous->next = teamToken.next;
-//             }
-//         }
-//     }
-//
-//     void add_record_token(RecordToken &token, int record) {
-//         RecordToken *currentHead = p->records[record];
-//         if (currentHead != nullptr) {
-//             currentHead->previous = &token;
-//             token.next = currentHead;
-//         }
-//
-//         p->records[record] = &token;
-//     }
-//
-//     void merge_teams(const int &teamId1, const int &teamId2, bool mergeToFirst) {
-//         auto team1 = p->teams.search(teamId1);
-//         auto team2 = p->teams.search(teamId2);
-//
-//         return merge_teams(team1, team2, mergeToFirst);
-//     }
-//
-//     void merge_teams(shared_ptr<Team> team1, shared_ptr<Team> team2, bool mergeToFirst) {
-//         auto toTeam = mergeToFirst ? team1 : team2;
-//         auto fromTeam = mergeToFirst ? team2 : team1;
-//
-//         removeTeamFromRecord(*fromTeam);
-//
-//         updateRecord(*toTeam, toTeam->totalRecord + fromTeam->totalRecord);
-//
-//         p->teamMembership.unite(toTeam->id, fromTeam->id);
-//
-//         fromTeam->deactivate();
-//     }
-// };

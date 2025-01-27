@@ -27,53 +27,22 @@
 
 using namespace std;
 
-// double linked list
-class RecordToken
-{
-public:
-    int teamId;
-    RecordToken() = default;
-
-    RecordToken(int teamId) : teamId(teamId), next(nullptr)
-    {
-        clearPrevious();
-    }
-
-    shared_ptr<RecordToken> next;
-    weak_ptr<RecordToken> previous;
-
-
-    bool operator==(const RecordToken& other)
-    {
-        return &other == this;
-    }
-
-    void clearPrevious()
-    {
-        previous = std::shared_ptr<RecordToken>(nullptr);
-    }
-};
-
 class Plains
 {
 private:
-    HashTable<int, Team> teams;
-    HashTable<int, Jockey> jockeys;
+    HashTable<Team> teams;
+    HashTable<Jockey> jockeys;
 
-    // for every jockey added, a set by it's id is created
-    // if the team the jockey is added to empty, then the teams set id is this jockey id,
-    // if not, then the jockey is merged with the team's set id.
-    // therefore, in terms of length of hashtable, it's O(n)
-    // but in terms of active sets, it's O(m).
-    // UnionFind jockeysTeamMembership;
-    UnionFind teamMembership;
-    HashTable<int, int> membershipIdentifier;
+    // universe: teams
+    UnionFind teamMembership; // Size => O(m)
+    // setId->teamId
+    HashTable<int> membershipIdentifier; // Size => O(m)
 
     // teamId->token
-    HashTable<int, RecordToken> recordTokens;
+    HashTable<Team::RecordToken> recordTokens; // Size => O(m)
 
     // record->token
-    HashTable<int, RecordToken> records;
+    HashTable<Team::RecordToken> records; // Size => O(m) (requires resizing)
 
 
 
@@ -82,25 +51,31 @@ private:
         Plains* p;
 
     private:
+        // O(1)
         void removeTeamFromRecord(const shared_ptr<Team>& team) ;
+
+        static int recordKey(const int& record);
 
     public:
         PlainsUtils(Plains* _p);
 
+        // O(log(m))
         bool inSameTeamMembership(const shared_ptr<Jockey>& a, const shared_ptr<Jockey>& b) const;
 
         // O(log(m))
         shared_ptr<Team> team(const shared_ptr<Jockey>& a) const;
+     
+        // O(1)
+        static bool invalid_team(const shared_ptr<Team> &team);
 
-        static bool invalid(const shared_ptr<Team> &team);
+        // O(1)
+        void update_record(const shared_ptr<Team>& team, const int& record);
 
-        void updateRecord(const shared_ptr<Team>& team, const int& record);
+        // O(1)
+        void add_record_token(const shared_ptr<Team::RecordToken>& token, const int& record) const;
 
-        void add_record_token(const shared_ptr<RecordToken>& token, const int& record) const;
-
-        void merge_teams(shared_ptr<Team> team1, shared_ptr<Team> team2, bool mergeToFirst, bool dryMerge);
-
-        static int recordKey(const int& record);
+        // O(log(m))
+        void merge_teams(shared_ptr<Team> team1, shared_ptr<Team> team2, bool mergeToFirst);
     };
 
     PlainsUtils utils;

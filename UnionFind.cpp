@@ -1,38 +1,6 @@
 //
 // Created by Farah Qub on 17/01/2025.
 //
-
-// #include "UnionFind.h"
-//
-// template <typename T>
-// class Structure {
-// public:
-//     // Find with path compression
-//     T* A(T* object) {
-//         if (object->parent != object) {
-//             object->parent = find(object->parent); // Path compression
-//         }
-//         return object->parent;
-//     }
-//
-//     // Union by rank
-//     void B(T* object1, T* object2) {
-//         T* root1 = find(object1);
-//         T* root2 = find(object2);
-//
-//         if (root1 != root2) {
-//             if (root1->rank > root2->rank) {
-//                 root2->parent = root1;
-//             } else if (root1->rank < root2->rank) {
-//                 root1->parent = root2;
-//             } else {
-//                 root2->parent = root1;
-//                 root1->rank++;
-//             }
-//         }
-//     }
-// };
-
 #include "UnionFind.h"
 
 UnionFind::UnionFind() {

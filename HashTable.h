@@ -1,9 +1,9 @@
 //
-// Created by Farah Qub on 17/01/2025.
+// Created by jamal on 21/01/2025.
 //
 
-#ifndef DS_WET2_WINTER_2024_2025_HASHTABLE_H
-#define DS_WET2_WINTER_2024_2025_HASHTABLE_H
+#ifndef HASHTABLE_H
+#define HASHTABLE_H
 
 #include <functional>
 #include <memory>
@@ -13,9 +13,14 @@
 
 using namespace std;
 
-template <typename TKey, typename TValue>
+// TODO: split header def from impl
+template <typename TValue>
 class HashTable : public enable_shared_from_this<HashTable<TKey, TValue>>
 {
+    // although at first created with TKey param, the hashtable thoughout the application
+    // only used TKey = int. therefore removing unnessary param.
+    using TKey = int;
+
     const float MAX_LOAD_FACTOR = 0.75;
 
     class Pair
@@ -24,7 +29,7 @@ class HashTable : public enable_shared_from_this<HashTable<TKey, TValue>>
         TKey key;
         shared_ptr<TValue> value;
 
-        Pair(TKey key, shared_ptr<TValue> value): key(key), value(value)
+        Pair(TKey key, shared_ptr<TValue> value) : key(key), value(value)
         {
         }
     };
@@ -33,18 +38,35 @@ class HashTable : public enable_shared_from_this<HashTable<TKey, TValue>>
 
     using Table = TableItem;
 
-    Table* table;
+    Table *table;
 
     int tableSize;
     int size;
 
-    int hash_a;
-    int hash_b;
-
-    int hash(const TKey& key) const
+    class HashFunction
     {
-        return (hash_a * key + hash_b) % tableSize;
-    }
+    private:
+        int hash_a;
+        int hash_b;
+
+    public:
+        HashFunction()
+        {
+            // Seed for random number generation
+            std::srand(std::time(nullptr));
+            // Generate random coefficients a and b
+
+            hash_a = std::rand() % tableSize + 1; // a should be non-zero
+            hash_b = std::rand() % tableSize;
+        }
+
+        int operator()(const TKey &key)
+        {
+            return (hash_a * key + hash_b) % tableSize;
+        }
+    };
+
+    HashFunction hash;
 
     void resize()
     {
@@ -55,7 +77,7 @@ class HashTable : public enable_shared_from_this<HashTable<TKey, TValue>>
         size = 0;
         for (int i = 0; i < oldSize; i++)
         {
-            for (const shared_ptr<Pair>& pair : table[i])
+            for (const shared_ptr<Pair> &pair : table[i])
             {
                 m_insert(newTable, pair);
             }
@@ -67,8 +89,7 @@ class HashTable : public enable_shared_from_this<HashTable<TKey, TValue>>
         table = newTable;
     }
 
-
-    void m_insert(Table* table, const shared_ptr<Pair>& pair)
+    void m_insert(Table *table, const shared_ptr<Pair> &pair)
     {
         int hashKey = hash(pair->key);
 
@@ -77,15 +98,16 @@ class HashTable : public enable_shared_from_this<HashTable<TKey, TValue>>
         size++;
     }
 
-    shared_ptr<Pair> m_search(const TKey& key) const
+    shared_ptr<Pair> m_search(const TKey &key) const
     {
         int hashKey = hash(key);
 
         TableItem list = table[hashKey];
 
-        for (const auto& pair : list)
+        for (const auto &pair : list)
         {
-            if (pair->key == key) return pair;
+            if (pair->key == key)
+                return pair;
         }
 
         return nullptr;
@@ -95,14 +117,6 @@ public:
     HashTable() : tableSize(10), size(0)
     {
         table = new Table[tableSize];
-
-        // Seed for random number generation
-        std::srand(std::time(nullptr));
-        // Generate random coefficients a and b
-        hash_a = std::rand() % tableSize + 1; // a should be non-zero
-        hash_b = std::rand() % tableSize;
-        // hash_a = 5;
-        // hash_b = 1;
     }
 
     ~HashTable()
@@ -110,15 +124,14 @@ public:
         delete[] table;
     }
 
-
-    void insert(const TKey& key, const TValue& value)
+    void insert(const TKey &key, const TValue &value)
     {
         shared_ptr<TValue> value_ptr = make_shared<TValue>(value);
 
         insert(key, value_ptr);
     }
 
-    void insert(const TKey& key, shared_ptr<TValue> value_ptr)
+    void insert(const TKey &key, shared_ptr<TValue> value_ptr)
     {
         // resize hash table
         if (size >= tableSize * MAX_LOAD_FACTOR)
@@ -131,54 +144,54 @@ public:
         m_insert(table, pair);
     }
 
-    bool exists(const TKey& key)
+    bool exists(const TKey &key)
     {
         return search(key) != nullptr;
     }
 
-
-    shared_ptr<TValue> search(const TKey& key) const
+    shared_ptr<TValue> search(const TKey &key) const
     {
         int hashKey = hash(key);
 
         TableItem list = table[hashKey];
 
-        for (const auto& pair : list)
+        for (const auto &pair : list)
         {
-            if (pair->key == key) return pair->value;
+            if (pair->key == key)
+                return pair->value;
         }
 
         return nullptr;
     }
 
-    void upsert(const TKey& key, const TValue& value)
+    void upsert(const TKey &key, const TValue &value)
     {
         auto ptr = search(key);
         if (ptr == nullptr)
         {
             return insert(key, value);
         }
-        //update
+        // update
         *ptr = value;
     }
 
-    void upsert(const TKey& key, shared_ptr<TValue> value_ptr)
+    void upsert(const TKey &key, shared_ptr<TValue> value_ptr)
     {
         auto pair = m_search(key);
         if (pair == nullptr)
         {
             return insert(key, value_ptr);
         }
-        //update
+        // update
         pair->value = value_ptr;
     }
 
-    const TValue& operator [](const TKey& key) const
+    const TValue &operator[](const TKey &key) const
     {
         return *search(key);
     }
 
-    TValue& operator [](const TKey& key)
+    TValue &operator[](const TKey &key)
     {
         return *search(key);
     }
@@ -188,86 +201,66 @@ public:
         return (float)size / (float)tableSize;
     }
 
+    // TODO: for debugging remove later.
+    //  class Iterator
+    //  {
+    //  private:
+    //      Table* table;
+    //      int tableIndex;
+    //      typename TableItem::Iterator listIterator;
 
-    class Iterator
-    {
-    private:
-        Table* table;
-        int tableIndex;
-        typename TableItem::Iterator listIterator;
+    // public:
+    //     Iterator(Table* table, int table_index,
+    //              typename DoubleLinkedList<shared_ptr<Pair>>::Iterator list_iterator)
+    //         : table(table),
+    //           tableIndex(table_index),
+    //           listIterator(list_iterator)
+    //     {
+    //     }
 
-    public:
-        Iterator(Table* table, int table_index,
-                 typename DoubleLinkedList<shared_ptr<Pair>>::Iterator list_iterator)
-            : table(table),
-              tableIndex(table_index),
-              listIterator(list_iterator)
-        {
-        }
+    //     Iterator& operator++()
+    //     {
+    //         try
+    //         {
+    //             if (listIterator.current == nullptr)
+    //             {
+    //                 tableIndex++;
+    //                 listIterator = table[tableIndex].begin();
+    //             }
+    //             else
+    //             {
+    //                 listIterator = listIterator.operator++();
+    //             }
+    //         }
+    //         catch (...)
+    //         {
+    //             return *(this);
+    //         }
 
-        Iterator& operator++()
-        {
-            try
-            {
-                if (listIterator.current == nullptr)
-                {
-                    tableIndex++;
-                    listIterator = table[tableIndex].begin();
-                }
-                else
-                {
-                    listIterator = listIterator.operator++();
-                }
-            }
-            catch (...)
-            {
-                return *(this);
-            }
+    //         return *(this);
+    //     }
 
-            return *(this);
-        }
+    //     bool operator!=(const Iterator& other)
+    //     {
+    //         return listIterator != other.listIterator || tableIndex != other.tableIndex;
+    //     }
 
-        bool operator!=(const Iterator& other)
-        {
-            return listIterator != other.listIterator || tableIndex != other.tableIndex;
-        }
+    //     shared_ptr<TValue> operator*()
+    //     {
+    //         if (listIterator.current == nullptr) return nullptr;
+    //         return (*listIterator)->value;
+    //     }
+    // };
 
-        shared_ptr<TValue> operator*()
-        {
-            if (listIterator.current == nullptr) return nullptr;
-            return (*listIterator)->value;
-        }
-    };
+    // Iterator begin()
+    // {
+    //     return Iterator(table, 0, table[0].begin());
+    // }
 
-
-    Iterator begin()
-    {
-        return Iterator(table, 0, table[0].begin());
-    }
-
-    Iterator end()
-    {
-        return Iterator(table, tableSize-1, table[tableSize - 1].end());
-    }
+    // Iterator end()
+    // {
+    //     return Iterator(table, tableSize-1, table[tableSize - 1].end());
+    // }
 };
 
-
-// class H2
-// {
-// public:
-//     HashTable();
-//
-//     ~HashTable();
-//
-//     void insert(const TKey &key, const TValue &value);
-//
-//     bool exists(const TKey &key);
-//
-//     shared_ptr<TValue> search(const TKey &key) const;
-//
-//     TValue & operator [](const TKey &key);
-//
-//     float loadFactor() const;
-// };
-
-#endif //DS_WET2_WINTER_2024_2025_HASHTABLE_H
+#endif // HASHTABLE_H

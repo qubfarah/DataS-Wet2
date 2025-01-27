@@ -7,17 +7,27 @@
 
 #include "Team.h"
 
-class Jockey {
-public:
+class Jockey
+{
+private:
     int id;
     int originalTeamId;
     int record;
 
-    Jockey() = default;
+    void updateRecord(const int &);
 
-    Jockey(int jockeyId, int teamId)
-            : id(jockeyId), originalTeamId(teamId), record(0) {}
+public:
+    Jockey();
+
+    Jockey(int jockeyId, int teamId);
+
+    int getId() const;
+    int getOriginalTeamId() const;
+
+    void increase_record();
+    void decrease_record();
+
+    int getRecord() const;
 };
 
-
-#endif //DS_WET2_WINTER_2024_2025_JOCKEY_H
+#endif // DS_WET2_WINTER_2024_2025_JOCKEY_H
