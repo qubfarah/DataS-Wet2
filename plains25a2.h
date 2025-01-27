@@ -54,7 +54,7 @@ private:
         // O(1)
         void removeTeamFromRecord(const shared_ptr<Team>& team) ;
 
-        static int recordKey(const int& record);
+        int recordKey(const int& record);
 
     public:
         PlainsUtils(Plains* _p);
@@ -66,7 +66,7 @@ private:
         shared_ptr<Team> team(const shared_ptr<Jockey>& a) const;
      
         // O(1)
-        static bool invalid_team(const shared_ptr<Team> &team);
+        bool invalid_team(const shared_ptr<Team> &team);
 
         // O(1)
         void update_record(const shared_ptr<Team>& team, const int& record);
