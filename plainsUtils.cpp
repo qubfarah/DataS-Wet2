@@ -6,39 +6,39 @@
 
 #include "plains25a2.h"
 
-Plains::PlainsUtils::PlainsUtils(Plains *_p) : p(_p)
+Plains::PlainsUtils::PlainsUtils(Plains* _p) : p(_p)
 {
 }
 
 // O(log(m))
-bool Plains::PlainsUtils::inSameTeamMembership(const shared_ptr<Jockey> &a, const shared_ptr<Jockey> &b) const
+bool Plains::PlainsUtils::inSameTeamMembership(const shared_ptr<Jockey>& a, const shared_ptr<Jockey>& b) const
 {
     return p->teamMembership.find(a->getOriginalTeamId()) == p->teamMembership.find(b->getOriginalTeamId());
 }
 
 // O(log(m))
-shared_ptr<Team> Plains::PlainsUtils::team(const shared_ptr<Jockey> &a) const
+shared_ptr<Team> Plains::PlainsUtils::team(const shared_ptr<Jockey>& a) const
 {
-    const auto &teamSetMembership = p->teamMembership.find(a->getOriginalTeamId());
+    const auto& teamSetMembership = p->teamMembership.find(a->getOriginalTeamId());
     int teamSet = p->membershipIdentifier[teamSetMembership];
 
     return p->teams.search(teamSet);
 }
 
 // O(1)
-bool Plains::PlainsUtils::invalid_team(const shared_ptr<Team> &team)
+bool Plains::PlainsUtils::invalid_team(const shared_ptr<Team>& team)
 {
     return team == nullptr || !team->isValid();
 }
 
 // O(1)
-int Plains::PlainsUtils::recordKey(const int &record)
+int Plains::PlainsUtils::recordKey(const int& record)
 {
     return std::abs(record);
 }
 
 // O(1)
-void Plains::PlainsUtils::add_record_token(const shared_ptr<Team::RecordToken> &token, const int &record) const
+void Plains::PlainsUtils::add_record_token(const shared_ptr<Team::RecordToken>& token, const int& record) const
 {
     const shared_ptr<Team::RecordToken> result = p->records.search(record);
 
@@ -47,7 +47,10 @@ void Plains::PlainsUtils::add_record_token(const shared_ptr<Team::RecordToken> &
 
     if (result != nullptr)
     {
-        assert(result->getPrevious().lock() == nullptr);
+        if (result->getPrevious().lock() != nullptr)
+        {
+            assert(result->getPrevious().lock() == nullptr);
+        }
 
         result->setPrevious(token);
 
@@ -60,7 +63,7 @@ void Plains::PlainsUtils::add_record_token(const shared_ptr<Team::RecordToken> &
 }
 
 // O(1)
-void Plains::PlainsUtils::update_record(const shared_ptr<Team> &team, const int &record)
+void Plains::PlainsUtils::update_record(const shared_ptr<Team>& team, const int& record)
 {
     auto teamToken = p->recordTokens.search(team->getId());
 
@@ -72,7 +75,7 @@ void Plains::PlainsUtils::update_record(const shared_ptr<Team> &team, const int 
 }
 
 // O(1)
-void Plains::PlainsUtils::removeTeamFromRecord(const shared_ptr<Team> &team)
+void Plains::PlainsUtils::removeTeamFromRecord(const shared_ptr<Team>& team)
 {
     auto teamToken = p->recordTokens.search(team->getId());
 
@@ -91,6 +94,12 @@ void Plains::PlainsUtils::removeTeamFromRecord(const shared_ptr<Team> &team)
         if (next != nullptr)
         {
             next->clearPrevious();
+        } else
+        {
+            //TODO: remove
+            auto dSearch =p->records.search(teamRecord);
+            assert(dSearch == nullptr);
+
         }
     }
     else

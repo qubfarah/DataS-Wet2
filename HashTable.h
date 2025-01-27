@@ -15,7 +15,7 @@ using namespace std;
 
 // TODO: split header def from impl
 template <typename TValue>
-class HashTable : public enable_shared_from_this<HashTable<TValue>>
+class HashTable
 {
     // although at first created with TKey param, the hashtable thoughout the application
     // only used TKey = int. therefore removing unnessary param.
@@ -114,7 +114,7 @@ class HashTable : public enable_shared_from_this<HashTable<TValue>>
     {
         int hashKey = hash(key);
 
-        TableItem list = table[hashKey];
+        TableItem& list = table[hashKey];
 
         for (typename TableItem::NodeToken token : list)
         {
@@ -205,6 +205,10 @@ public:
         auto token = m_search(key);
         if (token == nullptr)
         {
+            if(value_ptr == nullptr)
+            {
+                return ;
+            }
             return insert(key, value_ptr);
         }
 
