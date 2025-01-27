@@ -5,14 +5,29 @@
 #ifndef DS_WET2_WINTER_2024_2025_JOCKEY_H
 #define DS_WET2_WINTER_2024_2025_JOCKEY_H
 
-#endif //DS_WET2_WINTER_2024_2025_JOCKEY_H
+#include "Team.h"
 
-class Jockey {
-public:
+class Jockey
+{
+private:
     int id;
-    int teamId;
+    int originalTeamId;
     int record;
 
-    Jockey(int jockeyId, int teamId)
-            : id(jockeyId), teamId(teamId), record(0) {}
+    void updateRecord(const int &);
+
+public:
+    Jockey();
+
+    Jockey(int jockeyId, int teamId);
+
+    int getId() const;
+    int getOriginalTeamId() const;
+
+    void increase_record();
+    void decrease_record();
+
+    int getRecord() const;
 };
+
+#endif // DS_WET2_WINTER_2024_2025_JOCKEY_H
