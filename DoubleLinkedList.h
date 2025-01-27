@@ -77,7 +77,6 @@ public:
 
     DoubleLinkedList();
 
-    // disable copies
     DoubleLinkedList(const DoubleLinkedList&) = delete;
 
     Iterator begin();
@@ -85,7 +84,7 @@ public:
     Iterator end();
 
 
-    void removeIfHead(const NodeToken&);
+    void movePointer();
 
     void insert(T);
 };
@@ -135,11 +134,11 @@ typename DoubleLinkedList<T>::Iterator DoubleLinkedList<T>::end()
 }
 
 template <typename T>
-void DoubleLinkedList<T>::removeIfHead(const NodeToken& token)
+void DoubleLinkedList<T>::movePointer()
 {
-    if (token == head)
+    if (head != nullptr)
     {
-        head = nullptr;
+        head = head->next;
     }
 }
 
@@ -193,15 +192,17 @@ void DoubleLinkedList<T>::NodeToken::remove()
             next->previous = previous;
         }
     }
-    else if (next != nullptr)
+    else
     {
-        next->resetPrevious();
+        parent->movePointer();
+        if (next != nullptr)
+        {
+            next->resetPrevious();
+        }
     }
 
     node->next = nullptr;
     node->resetPrevious();
-
-    parent->removeIfHead(*this);
 }
 
 template <typename T>
