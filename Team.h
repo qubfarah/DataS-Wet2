@@ -7,6 +7,8 @@
 
 #include <memory>
 
+using namespace std;
+
 class Team
 {
 private:

@@ -22,15 +22,38 @@ private:
         shared_ptr<Node> next;
         weak_ptr<Node> previous;
 
-
         T data;
 
-        Node(T data, shared_ptr<Node> next) : next(next), previous(shared_ptr<Node>(nullptr)), data(move(data))
+        Node(T data, shared_ptr<Node> next) : next(next),
+                                              data(move(data))
         {
+            resetPrevious();
         };
+
+        void resetPrevious()
+        {
+            previous = shared_ptr<Node>(nullptr);
+        }
     };
 
     shared_ptr<Node> head;
+
+public:
+    class NodeToken
+    {
+    private:
+        shared_ptr<Node> node;
+
+    public:
+        NodeToken(shared_ptr<Node> node);
+        NodeToken(std::nullptr_t p);
+
+        bool operator==(const T &) const;
+
+        void remove();
+
+        T &operator*() const;
+    };
 
 public:
     class Iterator
@@ -41,20 +64,18 @@ public:
     public:
         explicit Iterator(shared_ptr<Node> current);
 
-        Iterator& operator++();
+        Iterator &operator++();
 
-        bool operator!=(const Iterator&);
+        bool operator!=(const Iterator &);
 
-        T& operator*();
+        NodeToken operator*();
     };
 
     DoubleLinkedList();
 
-
     Iterator begin();
 
     Iterator end();
-
 
     void insert(T);
 };
@@ -65,9 +86,10 @@ DoubleLinkedList<T>::Iterator::Iterator(shared_ptr<Node> current) : current(curr
 }
 
 template <typename T>
-typename DoubleLinkedList<T>::Iterator& DoubleLinkedList<T>::Iterator::operator++()
+typename DoubleLinkedList<T>::Iterator &DoubleLinkedList<T>::Iterator::operator++()
 {
-    if (current == nullptr) throw std::out_of_range("Iterator::operator++()");
+    if (current == nullptr)
+        throw std::out_of_range("Iterator::operator++()");
 
     current = current->next;
 
@@ -75,15 +97,15 @@ typename DoubleLinkedList<T>::Iterator& DoubleLinkedList<T>::Iterator::operator+
 }
 
 template <typename T>
-bool DoubleLinkedList<T>::Iterator::operator!=(const Iterator& other)
+bool DoubleLinkedList<T>::Iterator::operator!=(const Iterator &other)
 {
     return current != other.current;
 }
 
 template <typename T>
-T& DoubleLinkedList<T>::Iterator::operator*()
+typename DoubleLinkedList<T>::NodeToken DoubleLinkedList<T>::Iterator::operator*()
 {
-    return current->data;
+    return current;
 }
 
 template <typename T>
@@ -114,5 +136,48 @@ void DoubleLinkedList<T>::insert(T data)
     head = newNode;
 }
 
+template <typename T>
+DoubleLinkedList<T>::NodeToken::NodeToken(shared_ptr<Node> node) : node(node)
+{
+}
 
-#endif //DOUBLELINKEDLIST_H
+template <typename T>
+DoubleLinkedList<T>::NodeToken::NodeToken(std::nullptr_t p) : node(p)
+{
+}
+
+template <typename T>
+bool DoubleLinkedList<T>::NodeToken::operator==(const T &value) const
+{
+    return this->operator*() == value;
+}
+
+template <typename T>
+void DoubleLinkedList<T>::NodeToken::remove()
+{
+    auto next = node->next;
+
+    if (auto previous = node->previous.lock())
+    {
+        previous->next = next;
+        if (next != nullptr)
+        {
+            next->previous = previous;
+        }
+    }
+    else if (next != nullptr)
+    {
+        next->resetPrevious();
+    }
+
+    node->next = nullptr;
+    node->resetPrevious();
+}
+
+template <typename T>
+T &DoubleLinkedList<T>::NodeToken::operator*() const
+{
+    return node->data;
+}
+
+#endif // DOUBLELINKEDLIST_H

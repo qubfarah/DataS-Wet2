@@ -15,7 +15,7 @@ using namespace std;
 
 // TODO: split header def from impl
 template <typename TValue>
-class HashTable : public enable_shared_from_this<HashTable<TKey, TValue>>
+class HashTable : public enable_shared_from_this<HashTable<TValue>>
 {
     // although at first created with TKey param, the hashtable thoughout the application
     // only used TKey = int. therefore removing unnessary param.
@@ -48,21 +48,27 @@ class HashTable : public enable_shared_from_this<HashTable<TKey, TValue>>
     private:
         int hash_a;
         int hash_b;
+        int m;
 
     public:
-        HashFunction()
+        HashFunction(const int &m) : m(m)
         {
             // Seed for random number generation
             std::srand(std::time(nullptr));
             // Generate random coefficients a and b
 
-            hash_a = std::rand() % tableSize + 1; // a should be non-zero
-            hash_b = std::rand() % tableSize;
+            hash_a = std::rand() % m + 1; // a should be non-zero
+            hash_b = std::rand() % m;
         }
 
-        int operator()(const TKey &key)
+        int operator()(const int &key) const
         {
-            return (hash_a * key + hash_b) % tableSize;
+            return (hash_a * key + hash_b) % m;
+        }
+
+        void recalibrate(const int &newSize)
+        {
+            m = newSize;
         }
     };
 
@@ -70,18 +76,24 @@ class HashTable : public enable_shared_from_this<HashTable<TKey, TValue>>
 
     void resize()
     {
-        auto oldSize = tableSize;
-        tableSize *= 2;
-        auto newTable = new Table[tableSize];
+        auto newSize = tableSize * 2;
+
+        auto newTable = new Table[newSize];
+
+        hash.recalibrate(newSize);
 
         size = 0;
-        for (int i = 0; i < oldSize; i++)
+        for (int i = 0; i < tableSize; i++)
         {
-            for (const shared_ptr<Pair> &pair : table[i])
+            for (const auto &token : table[i])
             {
+                const shared_ptr<Pair> &pair = *token;
+
                 m_insert(newTable, pair);
             }
         }
+
+        tableSize = newSize;
 
         // free previous data;
         delete[] table;
@@ -98,23 +110,40 @@ class HashTable : public enable_shared_from_this<HashTable<TKey, TValue>>
         size++;
     }
 
-    shared_ptr<Pair> m_search(const TKey &key) const
+    typename TableItem::NodeToken m_search(const TKey &key) const
     {
         int hashKey = hash(key);
 
         TableItem list = table[hashKey];
 
-        for (const auto &pair : list)
+        for (typename TableItem::NodeToken token : list)
         {
+            auto pair = *token;
             if (pair->key == key)
-                return pair;
+                // make sure it returns a copy not a ref
+                return token;
         }
 
+        // this converts to token with empty node
         return nullptr;
     }
 
+    shared_ptr<Pair> m_find(const TKey &key) const
+    {
+        auto token = m_search(key);
+        if (token == nullptr)
+            return nullptr;
+
+        return *token;
+    }
+
+    void m_remove(typename TableItem::NodeToken &token)
+    {
+        token.remove();
+    }
+
 public:
-    HashTable() : tableSize(10), size(0)
+    HashTable() : tableSize(10), size(0), hash(tableSize)
     {
         table = new Table[tableSize];
     }
@@ -151,17 +180,13 @@ public:
 
     shared_ptr<TValue> search(const TKey &key) const
     {
-        int hashKey = hash(key);
+        auto pair = m_find(key);
 
-        TableItem list = table[hashKey];
+        if (pair == nullptr)
+            return nullptr;
 
-        for (const auto &pair : list)
-        {
-            if (pair->key == key)
-                return pair->value;
-        }
-
-        return nullptr;
+        // value of pair
+        return pair->value;
     }
 
     void upsert(const TKey &key, const TValue &value)
@@ -177,13 +202,23 @@ public:
 
     void upsert(const TKey &key, shared_ptr<TValue> value_ptr)
     {
-        auto pair = m_search(key);
-        if (pair == nullptr)
+        auto token = m_search(key);
+        if (token == nullptr)
         {
             return insert(key, value_ptr);
         }
-        // update
-        pair->value = value_ptr;
+
+        if (value_ptr == nullptr)
+        {
+            // remove item
+            m_remove(token);
+        }
+        else
+        {
+            auto pair = *token;
+            // update
+            pair->value = value_ptr;
+        }
     }
 
     const TValue &operator[](const TKey &key) const

@@ -80,10 +80,6 @@ private:
 
     PlainsUtils utils;
 
-    //TODO: remove
-public:
-    int commandId = 0;
-
 public:
     // <DO-NOT-MODIFY> {
     Plains();

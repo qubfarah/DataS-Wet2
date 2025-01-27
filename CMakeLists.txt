@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.22)
+cmake_minimum_required(VERSION 3.16)
 project(DS_wet2_Winter_2024_2025)
 
 set(CMAKE_CXX_STANDARD 11)
@@ -25,7 +25,6 @@ add_executable(DS_wet2_Winter_2024_2025
         Jockey.cpp
         Jockey.h
         plainsUtils.cpp
-        plainsDebug.h
 )
 
 target_link_libraries(DS_wet2_Winter_2024_2025 PUBLIC core)
