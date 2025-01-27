@@ -67,12 +67,15 @@ private:
     // but in terms of active sets, it's O(m).
     // UnionFind jockeysTeamMembership;
     UnionFind teamMembership;
+    HashTable<int, int> membershipIdentifier;
 
     // teamId->token
     HashTable<int, RecordToken> recordTokens;
 
     // record->token
     HashTable<int, RecordToken> records;
+
+
 
     class PlainsUtils
     {

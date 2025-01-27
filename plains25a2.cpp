@@ -35,7 +35,8 @@ StatusType Plains::add_team(int teamId)
 
     recordTokens.insert(teamId, RecordToken(teamId));;
 
-    teamMembership.makeset(teamId);
+    membershipIdentifier.insert(teamMembership.makeset(teamId), teamId);
+
 
     // starting at 0
     utils.add_record_token(recordTokens.search(teamId), 0);
@@ -120,11 +121,11 @@ StatusType Plains::unite_by_record(int record)
     if (recordsList == nullptr) return StatusType::FAILURE;
 
 
-    for(auto team : teams)
-    {
-        if(team == nullptr || utils.invalid(team)) continue;
-        std::cout << team->id << ": " <<team->totalRecord << std::endl;
-    }
+    // for(auto team : teams)
+    // {
+    //     if(team == nullptr || utils.invalid(team)) continue;
+    //     std::cout << team->id << ": " <<team->totalRecord << std::endl;
+    // }
 
     if(commandId==170)
     {

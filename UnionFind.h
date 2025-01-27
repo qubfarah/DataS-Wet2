@@ -22,7 +22,7 @@ public:
     explicit UnionFind();
 
     // key is key, identifier is like a meta-data for the set (teamId for example)
-    void makeset(const int& key);
+    int makeset(const int& key);
 
 
     // returns the set of the index
