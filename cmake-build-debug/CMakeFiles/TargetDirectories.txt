@@ -1,3 +1,0 @@
-/Users/farahqub/Desktop/semester 4/mvne/hws/DS_wet2_Winter_2024-2025/cmake-build-debug/CMakeFiles/DS_wet2_Winter_2024_2025.dir
-/Users/farahqub/Desktop/semester 4/mvne/hws/DS_wet2_Winter_2024-2025/cmake-build-debug/CMakeFiles/edit_cache.dir
-/Users/farahqub/Desktop/semester 4/mvne/hws/DS_wet2_Winter_2024-2025/cmake-build-debug/CMakeFiles/rebuild_cache.dir
