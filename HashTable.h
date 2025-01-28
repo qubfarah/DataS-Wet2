@@ -5,9 +5,9 @@
 #ifndef HASHTABLE_H
 #define HASHTABLE_H
 
-#include <functional>
 #include <memory>
 #include <ctime>
+#include <cmath>
 
 #include "DoubleLinkedList.h"
 
@@ -76,7 +76,7 @@ class HashTable {
         }
 
         bool isPrime(const int &n) {
-            int sqrt_b = sqrt(n);
+            int sqrt_b = std::sqrt(n);
             for (int i = 1; i < sqrt_b; i++) {
                 if (sqrt_b * sqrt_b == n) return false;
             }
