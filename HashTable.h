@@ -66,13 +66,13 @@ class HashTable {
         }
 
         void recalibrate(const int &newSize) {
-            generate_hash_params();
             size = newSize;
             int k = newSize + 1;
             while (!isPrime(k)) {
                 k++;
             }
             prime = k;
+            generate_hash_params();
         }
 
         bool isPrime(const int &n) {
